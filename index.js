@@ -74,7 +74,7 @@ const mostrarDataTotal = (data) => {
 }
 
 //Mostrar datos de 3 funciones
-function mostrarData3funciones(){
+function mostrarData3funciones(data){
 mostrarDataIts(data)
 mostrarDataSirci(data)
 mostrarDataTotal(data)
