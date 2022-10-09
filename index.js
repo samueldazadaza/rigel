@@ -3,18 +3,19 @@ const url = 'https://api-rigel.herokuapp.com'
 //CODIGO PARA PINTAR DATOS EN HTML
 fetch(url)
   .then(response => response.json())
-  //.then(data => mostrarData3funciones(data))
   .then(data => mostrarDataTotal(data))
   .catch(error => console.log(error))
 
-const mostrarDataIts = (data) => {
+const mostrarDataTotal = (data) => {
     const datarigel = data.data.data
     const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
     const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
     const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
-  let body = ''
+
+    //pintar data its
+    let bodyits = ''
   for (let i = 0; i < datarigelits.length; i++){
-    body += `
+    bodyits += `
       <tr>
         <td> ${i + 1} </td>
         <td> ${datarigelits[i].vehicle_code} </td>
@@ -26,56 +27,40 @@ const mostrarDataIts = (data) => {
       </tr>
     `
   }
-  document.getElementById("dataits").innerHTML = body //para pintar datos en html
-}
 
-const mostrarDataSirci = (data) => {
-    const datarigel = data.data.data
-    const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
-    const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
-    const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
-  let body = ''
-  for (let i = 0; i < datarigelsirci.length; i++){
-    body += `
-      <tr>
-        <td> ${i + 1} </td>
-        <td> ${datarigelsirci[i].vehicle_code} </td>
-        <td> ${datarigelsirci[i].system_name} </td>
-        <td> ${datarigelsirci[i].issue_description} </td>
-        <td> ${datarigelsirci[i].date_created} </td>
-        <td> ${datarigelsirci[i].days_off} </td>
-        <td> ${datarigelsirci[i].is_inmovilized_vehicle} </td>
-      </tr>
-    `
-  }
-  document.getElementById("datasirci").innerHTML = body //para pintar datos en html
-}
+      //pintar data sirci
+      let bodysirci = ''
+      for (let i = 0; i < datarigelsirci.length; i++){
+        bodysirci += `
+          <tr>
+            <td> ${i + 1} </td>
+            <td> ${datarigelsirci[i].vehicle_code} </td>
+            <td> ${datarigelsirci[i].system_name} </td>
+            <td> ${datarigelsirci[i].issue_description} </td>
+            <td> ${datarigelsirci[i].date_created} </td>
+            <td> ${datarigelsirci[i].days_off} </td>
+            <td> ${datarigelsirci[i].is_inmovilized_vehicle} </td>
+          </tr>
+        `
+      }
 
-const mostrarDataTotal = (data) => {
-    const datarigel = data.data.data
-    const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
-    const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
-    const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
-  let body = ''
-  for (let i = 0; i < areaitbuses.length; i++){
-    body += `
-      <tr>
-        <td> ${i + 1} </td>
-        <td> ${areaitbuses[i].vehicle_code} </td>
-        <td> ${areaitbuses[i].system_name} </td>
-        <td> ${areaitbuses[i].issue_description} </td>
-        <td> ${areaitbuses[i].date_created} </td>
-        <td> ${areaitbuses[i].days_off} </td>
-        <td> ${areaitbuses[i].is_inmovilized_vehicle} </td>
-      </tr>
-    `
-  }
-  document.getElementById("datatotal").innerHTML = body //para pintar datos en html
-}
-
-//Mostrar datos de 3 funciones
-function mostrarData3funciones(data){
-mostrarDataIts(data)
-mostrarDataSirci(data)
-mostrarDataTotal(data)
+          //pintar data total
+    let bodytotal = ''
+    for (let i = 0; i < datarigel.length; i++){
+      bodytotal += `
+        <tr>
+          <td> ${i + 1} </td>
+          <td> ${datarigel[i].vehicle_code} </td>
+          <td> ${datarigel[i].system_name} </td>
+          <td> ${datarigel[i].issue_description} </td>
+          <td> ${datarigel[i].date_created} </td>
+          <td> ${datarigel[i].days_off} </td>
+          <td> ${datarigel[i].is_inmovilized_vehicle} </td>
+        </tr>
+      `
+    }
+  
+  document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
+  document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
+  document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
 }
