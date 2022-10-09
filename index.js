@@ -3,7 +3,6 @@ const url = 'https://api-rigel.herokuapp.com'
 //CODIGO PARA PINTAR DATOS EN HTML
 fetch(url)
   .then(response => response.json())
-  .then(data => mostrarDataIts(data))
   .then(data => mostrarDataSirci(data))
   .then(data => mostrarDataTotal(data))
   .catch(error => console.log(error))
