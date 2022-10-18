@@ -11,6 +11,10 @@ const mostrarDataTotal = (data) => {
     const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
     const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
     const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
+  const arr = datarigel
+
+const resultado = arr.reduce((prev, cur) => ((prev[cur] = prev[cur] + 1 || 1), prev), {})
+
 
     //pintar data its
     let bodyits = ''
@@ -65,6 +69,8 @@ const mostrarDataTotal = (data) => {
       `
     }
   
+  document.getElementById("dataprueba").innerHTML = resultado 
+
   document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
