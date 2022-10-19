@@ -4,10 +4,20 @@ const url = 'https://api-rigel.herokuapp.com'
 fetch(url)
   .then(response => response.json())
   .then(data => mostrarDataTotal(data))
+  //.then(data => mostrarsuma(data))
   .catch(error => console.log(error))
 
 const mostrarDataTotal = (data) => {
     const datarigel = data.data.data
+    console.log(data)
+    console.log(datarigel)
+    //contar cuantos elementos hay de cada area: "system_name"
+    const arr = datarigel
+    console.log(arr)
+    var resultado = arr.reduce( (acc, arr) => (acc[arr.system_name] = (acc[arr.system_name] || 0) + 1, acc), {} );
+    console.log(resultado)
+
+    //filtrar area its en general
     const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
     const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
     const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
