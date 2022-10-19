@@ -21,6 +21,10 @@ const mostrarDataTotal = (data) => {
     const datarigelits = datarigel.filter(item => item.system_name === 'IT-ITS')
     const datarigelsirci = datarigel.filter(item => item.system_name === 'IT-SIRCI')
     const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
+  const arr = datarigel
+
+const resultado = arr.reduce((prev, cur) => ((prev[cur] = prev[cur] + 1 || 1), prev), {})
+
 
     //pintar data its
     let bodyits = ''
@@ -34,6 +38,7 @@ const mostrarDataTotal = (data) => {
         <td> ${datarigelits[i].date_created} </td>
         <td> ${datarigelits[i].days_off} </td>
         <td> ${datarigelits[i].is_inmovilized_vehicle} </td>
+        <td> ${datarigelits[i].current_status} </td>
       </tr>
     `
   }
@@ -50,6 +55,9 @@ const mostrarDataTotal = (data) => {
             <td> ${datarigelsirci[i].date_created} </td>
             <td> ${datarigelsirci[i].days_off} </td>
             <td> ${datarigelsirci[i].is_inmovilized_vehicle} </td>
+            <td> ${datarigelsirci[i].current_status} </td>
+
+
           </tr>
         `
       }
@@ -66,10 +74,13 @@ const mostrarDataTotal = (data) => {
           <td> ${datarigel[i].date_created} </td>
           <td> ${datarigel[i].days_off} </td>
           <td> ${datarigel[i].is_inmovilized_vehicle} </td>
+          <td> ${datarigel[i].current_status} </td>
         </tr>
       `
     }
   
+  document.getElementById("dataprueba").innerHTML = resultado 
+
   document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
