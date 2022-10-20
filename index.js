@@ -1,5 +1,5 @@
-const url = 'http://localhost:5000'
-//const url = 'https://api-rigel.herokuapp.com'
+//const url = 'http://localhost:5000'
+const url = 'https://api-rigel.herokuapp.com'
 
 //CODIGO PARA PINTAR DATOS EN HTML
 fetch(url)
