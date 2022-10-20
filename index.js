@@ -1,4 +1,5 @@
-const url = 'https://api-rigel.herokuapp.com'
+const url = 'http://localhost:5000'
+//const url = 'https://api-rigel.herokuapp.com'
 
 //CODIGO PARA PINTAR DATOS EN HTML
 fetch(url)
@@ -7,7 +8,7 @@ fetch(url)
   .catch(error => console.log(error))
 
 const mostrarDataTotal = (data) => {
-    const datarigel = data.data.data
+    const datarigel = data.reporteRigel.inoperativos.data
     console.log(data)
     console.log(datarigel)
     //contar cuantos elementos hay de cada area: "system_name"
