@@ -83,7 +83,8 @@ const mostrarDataTotal = (data) => {
 
           <td> ${i + 1} </td>
 
-          //<td> ${sum[i]} </td>
+          <td> ${sum[i][0] } </td>
+          <td> ${sum[i][1] } </td>
 
      
 
