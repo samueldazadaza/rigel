@@ -82,7 +82,7 @@ const mostrarDataTotal = (data) => {
 
           <td> ${i + 1} </td>
 
-          //<td> ${inoperativosSuma[0][i][1]} </td>
+          //<td> ${inoperativosSuma[0][i]} </td>
 
      
 
