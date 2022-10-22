@@ -9,6 +9,7 @@ fetch(url)
 
 const mostrarDataTotal = (data) => {
     const datarigel = data.reporteRigel.inoperativos.data
+    const sum = data.reporteRigel.inoperativosSuma
     console.log(data)
     console.log(datarigel)
     //contar cuantos elementos hay de cada area: "system_name"
@@ -71,10 +72,10 @@ const mostrarDataTotal = (data) => {
     }
 
  //pintar data suma
-/*
+
     let bodysuma = ''
 
-    for (let i = 0; i < inoperativosSuma[0].length; i++){
+    for (let i = 0; i < sum.length; i++){
 
       bodysuma += `
 
@@ -82,7 +83,7 @@ const mostrarDataTotal = (data) => {
 
           <td> ${i + 1} </td>
 
-          //<td> ${inoperativosSuma[0][i]} </td>
+          //<td> ${sum[i]} </td>
 
      
 
@@ -102,12 +103,12 @@ const mostrarDataTotal = (data) => {
 
 
 
-*/
+
 
           
   
   document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
-  //document.getElementById("dataprueba").innerHTML = bodysuma //para pintar datos en html
+  document.getElementById("dataprueba").innerHTML = bodysuma //para pintar datos en html
 }
