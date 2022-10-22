@@ -70,16 +70,44 @@ const mostrarDataTotal = (data) => {
       `
     }
 
-              //pintar data reduce
-              let grafico = ''
-                grafico += `
-                  <p>${resultado}</p>
-                `
+ //pintar data suma
+
+    let bodysuma = ''
+
+    for (let i = 0; i < inoperativosSuma[0].length; i++){
+
+      bodysuma += `
+
+        <tr>
+
+          <td> ${i + 1} </td>
+
+          <td> ${inoperativosSuma[0][i][1]} </td>
+
+     
+
+
+
+ 
+
+         
+
+
+
+        </tr>
+
+      `
+
+    }
+
+
+
+
 
           
   
   document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
-  document.getElementById("dataprueba").innerHTML = grafico //para pintar datos en html
+  document.getElementById("dataprueba").innerHTML = bodysuma //para pintar datos en html
 }
