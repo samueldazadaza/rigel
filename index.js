@@ -35,6 +35,7 @@ const mostrarDataTotal = (data) => {
         <td> ${datarigelits[i].date_created} </td>
         <td> ${datarigelits[i].days_off} </td>
         <td> ${datarigelits[i].is_inmovilized_vehicle} </td>
+        <td> ${datarigelits[i].current_status} </td>
       </tr>
     `
   }
@@ -51,6 +52,7 @@ const mostrarDataTotal = (data) => {
             <td> ${datarigelsirci[i].date_created} </td>
             <td> ${datarigelsirci[i].days_off} </td>
             <td> ${datarigelsirci[i].is_inmovilized_vehicle} </td>
+            <td> ${datarigelsirci[i].current_status} </td>
           </tr>
         `
       }
@@ -67,7 +69,8 @@ const mostrarDataTotal = (data) => {
           <td> ${datarigel[i].date_created} </td>
           <td> ${datarigel[i].days_off} </td>
           <td> ${datarigel[i].is_inmovilized_vehicle} </td>
-        </tr>
+          <td> ${datarigel[i].current_status} </td>
+</tr>
       `
     }
 
