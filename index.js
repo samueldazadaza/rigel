@@ -99,4 +99,5 @@ const mostrarDataTotal = (data) => {
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
   document.getElementById("sumaporarea").innerHTML = bodysuma //para pintar datos en html
+  document.getElementById("loader").style.display = "none"; //para ocultar loader al cargar pagina web
 }
