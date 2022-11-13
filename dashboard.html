@@ -14,24 +14,16 @@
   </head>
 
   <body>
-    <div class="container-lg">
-      <!-- navbar -->
-      <nav class="navbar navbar-light bg-light">
-        <form class="form-inline">
-          <a href="./index.html">
-            <button class="btn btn-outline-success" type="button">Tabla</button>
-          </a>
-          <button class="btn btn-outline-success" type="button">
-            Dashboard
-          </button>
-          <button class="btn btn-outline-success" type="button">
-            boton vacio
-          </button>
-        </form>
-      </nav>
-      <!-- fin navbar -->
+        <!-- navbar -->
+        <nav class="nav nav-tabs mb-3 bg-light container">
+          <a class="nav-item nav-link active" href="#">Tabla</a>
+          <a class="nav-item nav-link" href="./dashboard.html">DashBoard</a>
+          <a class="nav-item nav-link" href="#">Button vacio</a>
+        </nav>
+        <!-- fin navbar -->
 
-      <h1>Ejemplo 1 - Gráfica de líneas</h1>
+    <div class="container-lg">
+       <h1>Ejemplo 1 - Gráfica de líneas</h1>
       <canvas id="grafica"></canvas>
     </div>
     <script src="dashboard.js"></script>
