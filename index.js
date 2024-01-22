@@ -85,6 +85,8 @@ const mostrarDataTotal = (data) => {
    console.log("comienza apintar data suma")
    //console.log(i)
    //console.log(sum[i][0])
+   //pagina para ver xml de disponibilidad de flota
+   //http://rigel.greenmovil.com.co:8080/RigelpbWS/disponibilidadFlota/todos?key=JM8xH8zNHX7XGsUe8rkDf
    //console.log(sum[i][1])
       bodysuma += `
         <tr>
