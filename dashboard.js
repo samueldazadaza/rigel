@@ -39,7 +39,7 @@ xmlhttp.onreadystatechange = function(){
               data: {
                 labels: datoArea,
                 datasets: [{
-                  label: 'cant. buses',
+                  label: 'Cantidad buses',
                   data: datoCantidadArea,
                   borderWidth: 1,
                   backgroundColor: "#ff335e"
