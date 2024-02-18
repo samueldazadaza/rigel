@@ -12,7 +12,7 @@ xmlhttp.onreadystatechange = function(){
 
         //data buses
         const arr = data.data
-        inoperativosSuma = arr.reduce( (acc, arr) => (acc[arr.system_name] = (acc[arr.system_name] || 0) + 1, acc), {} ); //genera contador de areas y cantidades
+        inoperativosSuma = arr.reduce( (acc, arr) => (acc[arr.system_name] = (acc[arr.system_name] || 0) + 1, acc), {} ); //genera objeto contador de areas y cantidades
         //let inoperativosSuma2 = Object.entries(inoperativosSuma) //para convertir de objeto a array
         console.log(inoperativosSuma)
 

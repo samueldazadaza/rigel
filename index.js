@@ -15,9 +15,10 @@ const datosGenerales = datos.data;
 console.log(datosGenerales)
 
 //filtrar area its en general
-const datosIts = datosGenerales.filter(item => item.system_name === 'IT-ITS')
-const datosSirci = datosGenerales.filter(item => item.system_name === 'IT-SIRCI')
+const datosIts = datosGenerales.filter(item => item.system_name === 'IT-ITS') //filtrar buses its
+const datosSirci = datosGenerales.filter(item => item.system_name === 'IT-SIRCI') //filtrar buses sirci
 //const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
+
 
     //datosIts
     let bodyits = ''
@@ -69,11 +70,32 @@ const datosSirci = datosGenerales.filter(item => item.system_name === 'IT-SIRCI'
           </tr>
         `
       }
+
+        //pintar data suma
+        //crear array suma areas
+            const arr = datosGenerales
+            inoperativosSuma = arr.reduce( (acc, arr) => (acc[arr.system_name] = (acc[arr.system_name] || 0) + 1, acc), {} ); //genera objeto contador de areas y cantidades 
+            clavecontadorareas = Object.keys(inoperativosSuma) // extraer solo nombre de area
+            valorcontadorareas = Object.values(inoperativosSuma) // extraer solo valor de area
+
+        let bodysuma = ''
+        
+        for (let i = 0; i < clavecontadorareas.length; i++){
+          console.log(clavecontadorareas[i])
+              bodysuma += `
+                <tr>
+                  <td> ${i + 1} </td>
+                  <td> ${ clavecontadorareas[i] } </td>
+                  <td> ${ valorcontadorareas[i] } </td>
+                </tr>
+              `
+        }
       
 
 //pintar datos en el html
   document.getElementById("dataits").innerHTML = bodyits //para pintar datos en html
   document.getElementById("datasirci").innerHTML = bodysirci //para pintar datos en html
   document.getElementById("datatotal").innerHTML = bodytotal //para pintar datos en html
+  document.getElementById("datasuma").innerHTML = bodysuma //para pintar datos en html
   document.getElementById("loader").style.display = "none"; //para ocultar loader al cargar pagina web
 }
