@@ -3,7 +3,8 @@
 
 // video graficos chart https://www.youtube.com/watch?v=oFLnXT7D4gc
 var xmlhttp = new XMLHttpRequest();
-var url = 'https://cute-gold-toad-vest.cyclic.app/';
+// var url = 'https://cute-gold-toad-vest.cyclic.app/'; //carga mas rapido, limite de peticiones 1000
+var url = 'https://apir2.onrender.com/';
 xmlhttp.open("GET", url, true);
 xmlhttp.send();
 xmlhttp.onreadystatechange = function(){
