@@ -1,6 +1,6 @@
 //const url = 'http://localhost:5000'
-//const url = 'https://apir2.onrender.com/'
-const url = 'https://cute-gold-toad-vest.cyclic.app/'
+const url = 'https://apir2.onrender.com/' //server lento
+// const url = 'https://cute-gold-toad-vest.cyclic.app/' //server rapido
 
 //CODIGO PARA PINTAR DATOS EN HTML
 fetch(url)
