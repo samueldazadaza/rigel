@@ -30,96 +30,29 @@ const datosSirciZ67 = datosSirci.filter(item => item.uf_code === 'ZMO V') //filt
 //const areaitbuses = [...datarigelits, ...datarigelsirci] //operador de propagación para fusionar objetos en JavaScript
 
 
-    //datosItsZ63
-    let bodyitsZ63 = ''
-    for (let i = 0; i < datosItsZ63.length; i++)
-      {
-      bodyitsZ63 += `
-        <tr>
-          <td> ${i + 1} </td>
-          <td> ${datosItsZ63[i].system_name} </td>
-          <td> ${datosItsZ63[i].vehicle_code} </td>
-          <td> ${datosItsZ63[i].issue_description} </td>
-          <td> ${datosItsZ63[i].date_created} </td>
-          <td> ${datosItsZ63[i].days_off} </td>
-          <td> ${datosItsZ63[i].is_inmovilized_vehicle} </td>
-          <td> ${datosItsZ63[i].current_status} </td>
-        </tr>
-      `
-      }
+    //funcion pintar tabla
+  function generateTableRows(data) {
+  return data.map((item, index) => `
+    <tr>
+      <td> ${index + 1} </td>
+      <td> ${item.system_name} </td>
+      <td> ${item.vehicle_code} </td>
+      <td> ${item.issue_description} </td>
+      <td> ${item.date_created} </td>
+      <td> ${item.days_off} </td>
+      <td> ${item.is_inmovilized_vehicle} </td>
+      <td> ${item.current_status} </td>
+    </tr>
+  `).join('');
+}
 
-    //datosItsZ67
-    let bodyitsZ67 = ''
-    for (let i = 0; i < datosItsZ67.length; i++)
-      {
-      bodyitsZ67 += `
-        <tr>
-          <td> ${i + 1} </td>
-          <td> ${datosItsZ67[i].system_name} </td>
-          <td> ${datosItsZ67[i].vehicle_code} </td>
-          <td> ${datosItsZ67[i].issue_description} </td>
-          <td> ${datosItsZ67[i].date_created} </td>
-          <td> ${datosItsZ67[i].days_off} </td>
-          <td> ${datosItsZ67[i].is_inmovilized_vehicle} </td>
-          <td> ${datosItsZ67[i].current_status} </td>
-        </tr>
-      `
-      }
-
-    //datossirciZ63
-    let bodysirciZ63 = ''
-    for (let i = 0; i < datosSirciZ63.length; i++)
-      {
-      bodysirciZ63 += `
-        <tr>
-          <td> ${i + 1} </td>
-          <td> ${datosSirciZ63[i].system_name} </td>
-          <td> ${datosSirciZ63[i].vehicle_code} </td>
-          <td> ${datosSirciZ63[i].issue_description} </td>
-          <td> ${datosSirciZ63[i].date_created} </td>
-          <td> ${datosSirciZ63[i].days_off} </td>
-          <td> ${datosSirciZ63[i].is_inmovilized_vehicle} </td>
-          <td> ${datosSirciZ63[i].current_status} </td>
-        </tr>
-      `
-      }
-
-    //datossirciZ67
-    let bodysirciZ67 = ''
-    for (let i = 0; i < datosSirciZ67.length; i++)
-      {
-      bodysirciZ67 += `
-        <tr>
-          <td> ${i + 1} </td>
-          <td> ${datosSirciZ67[i].system_name} </td>
-          <td> ${datosSirciZ67[i].vehicle_code} </td>
-          <td> ${datosSirciZ67[i].issue_description} </td>
-          <td> ${datosSirciZ67[i].date_created} </td>
-          <td> ${datosSirciZ67[i].days_off} </td>
-          <td> ${datosSirciZ67[i].is_inmovilized_vehicle} </td>
-          <td> ${datosSirciZ67[i].current_status} </td>
-        </tr>
-      `
-      }
+let bodyitsZ63 = generateTableRows(datosItsZ63);
+let bodyitsZ67 = generateTableRows(datosItsZ67);
+let bodysirciZ63 = generateTableRows(datosSirciZ63);
+let bodysirciZ67 = generateTableRows(datosSirciZ67);
+let bodytotal = generateTableRows(datosGenerales);
+  
     
-
-      //datosTotal
-      let bodytotal = ''
-      for (let i = 0; i < datosGenerales.length; i++){
-        bodytotal += `
-          <tr>
-            <td> ${i + 1} </td>
-            <td> ${datosGenerales[i].system_name} </td>
-            <td> ${datosGenerales[i].vehicle_code} </td>
-            <td> ${datosGenerales[i].issue_description} </td>
-            <td> ${datosGenerales[i].date_created} </td>
-            <td> ${datosGenerales[i].days_off} </td>
-            <td> ${datosGenerales[i].is_inmovilized_vehicle} </td>
-            <td> ${datosGenerales[i].current_status} </td>
-          </tr>
-        `
-      }
-
         //pintar data suma
         //crear array suma areas
             const arr = datosGenerales
