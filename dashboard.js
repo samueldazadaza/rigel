@@ -1,10 +1,12 @@
 //const url3 = 'https://cute-gold-toad-vest.cyclic.app/'
 //const url4 = 'https://api-rigel.herokuapp.com'
+//const url5 = 'https://api-rigel2.vercel.app/'
+//var url = 'https://apir2.onrender.com/';
 
 // video graficos chart https://www.youtube.com/watch?v=oFLnXT7D4gc
 var xmlhttp = new XMLHttpRequest();
 // var url = 'https://cute-gold-toad-vest.cyclic.app/'; //carga mas rapido, limite de peticiones 1000
-var url = 'https://apir2.onrender.com/';
+var url = 'https://api-rigel2.vercel.app/';
 xmlhttp.open("GET", url, true);
 xmlhttp.send();
 xmlhttp.onreadystatechange = function(){
