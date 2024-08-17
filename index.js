@@ -1,4 +1,8 @@
-const url = 'https://apir2.onrender.com/'; //server lento
+//const url = 'https://apir2.onrender.com/'; //server lento
+//const url3 = 'https://cute-gold-toad-vest.cyclic.app/'
+//const url4 = 'https://api-rigel.herokuapp.com'
+//var url = 'https://apir2.onrender.com/';
+var url = 'https://api-rigel2.vercel.app/':
 
 // Fetch data and display in HTML
 async function fetchDataAndDisplay() {
