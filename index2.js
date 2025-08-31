@@ -1,6 +1,7 @@
 // URLs de las fuentes de datos
 const urlrigel = 'https://api-rigel2.vercel.app/';
-const urlp60 = 'https://raw.githubusercontent.com/samueldazadaza/api-rigel/main/P60todos.txt';
+//const urlp60 = 'https://raw.githubusercontent.com/samueldazadaza/api-rigel/main/P60todos.txt';
+const urlp60 = 'http://192.168.23.160:7000/api_P60';
 
 
 // Objetos globales
