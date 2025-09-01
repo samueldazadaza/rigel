@@ -64,7 +64,7 @@ function enriquecerDatos() {
 
 // Función para mostrar los datos enriquecidos en HTML
 const mostrarDatosEnriquecidos = (datos) => {
-  const datosFiltrados = datos. //.filter(item => item.vehicle_status === "INOPERATIVO"); //lo quite para evitar error de 2 filas faltantes en el html
+  const datosFiltrados = datos //.filter(item => item.vehicle_status === "INOPERATIVO"); //lo quite para evitar error de 2 filas faltantes en el html
 
 
 // Punto fijo de referencia
