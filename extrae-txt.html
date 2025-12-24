@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Separador de campos por ":"</title>
+  <title>txt procesar</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -28,6 +28,7 @@
     .label { color: #0066cc; }   /* azul */
     .number { color: #2e7d32; }  /* verde */
     .letters { color: #d35400; } /* naranja */
+    .timeago { color: #9c27b0; font-style: italic; margin-left: 10px; }
     .switch-container { margin-bottom: 15px; }
   </style>
 </head>
@@ -41,6 +42,7 @@
 
   <h2>Procesar texto</h2>
 
+  <!-- Switch para activar/desactivar colores -->
   <div class="switch-container">
     <label>
       <input type="checkbox" id="colorSwitch" checked>
@@ -58,20 +60,52 @@
       <label for="output">Resultado:</label>
       <div id="output" class="resultado"></div>
       <button class="btn btn-sm btn-primary mt-2" onclick="copiar()">Copiar resultado</button>
+      <!-- Botón Google Maps + tiempo -->
+      <div id="extraInfo" class="d-flex align-items-center mt-2"></div>
     </div>
   </div>
 
   <script>
+    function calcularTiempo(fechaStr, horaStr) {
+      try {
+        const [dia, mes, anio] = fechaStr.split("-");
+        const [hora, minuto] = horaStr.split(":");
+        const fechaEvento = new Date(anio, mes - 1, dia, hora, minuto);
+        const ahora = new Date();
+        const diffMs = ahora - fechaEvento;
+        if (diffMs < 0) return "en el futuro";
+
+        const diffMin = Math.floor(diffMs / 60000);
+        const diffHoras = Math.floor(diffMin / 60);
+        const diffDias = Math.floor(diffHoras / 24);
+
+        if (diffDias > 0) return `${diffDias} día(s) y ${diffHoras % 24} hora(s) atrás`;
+        if (diffHoras > 0) return `${diffHoras} hora(s) y ${diffMin % 60} minuto(s) atrás`;
+        return `${diffMin} minuto(s) atrás`;
+      } catch {
+        return "";
+      }
+    }
+
     function procesar(texto) {
       const regex = /([\p{L}\p{M}\s\-]+):\s*([^/]+)(?=\/|$)/gu;
       const matches = [...texto.matchAll(regex)];
       const useColors = document.getElementById("colorSwitch").checked;
 
+      let direccionValor = null;
+      let fechaValor = null;
+      let horaValor = null;
+
       const resultadoColores = matches.map(m => {
+        const etiqueta = m[1].trim();
         const label = useColors
-          ? `<span class="label">${m[1].trim()}:</span>`
-          : `${m[1].trim()}:`;
+          ? `<span class="label">${etiqueta}:</span>`
+          : `${etiqueta}:`;
         const value = m[2].trim();
+
+        if (etiqueta.toLowerCase() === "dirección") direccionValor = value;
+        if (etiqueta.toLowerCase() === "fecha") fechaValor = value;
+        if (etiqueta.toLowerCase() === "hora") horaValor = value;
 
         if (useColors) {
           if (/^[0-9]+$/.test(value)) {
@@ -87,6 +121,19 @@
       }).join("<br>");
 
       document.getElementById("output").innerHTML = resultadoColores;
+
+      // Mostrar botón de Google Maps y tiempo juntos
+      const extraDiv = document.getElementById("extraInfo");
+      extraDiv.innerHTML = "";
+      if (direccionValor) {
+        const direccionEncoded = encodeURIComponent(direccionValor);
+        const mapsBtn = `<a href="https://www.google.com/maps/search/${direccionEncoded}" target="_blank" class="btn btn-sm btn-success">Ver en Google Maps</a>`;
+        let tiempoTxt = "";
+        if (fechaValor && horaValor) {
+          tiempoTxt = `<span class="timeago">${calcularTiempo(fechaValor, horaValor)}</span>`;
+        }
+        extraDiv.innerHTML = mapsBtn + tiempoTxt;
+      }
     }
 
     document.getElementById("input").addEventListener("input", (event) => {
@@ -95,6 +142,7 @@
         procesar(texto);
       } else {
         document.getElementById("output").innerHTML = "";
+        document.getElementById("extraInfo").innerHTML = "";
       }
     });
 
@@ -113,8 +161,7 @@
       selection.removeAllRanges();
       selection.addRange(range);
       document.execCommand("copy");
-    //   alert("Resultado copiado con formato y saltos de línea.");
+      //alert("Resultado copiado con formato y saltos de línea.");
     }
-  </script>
-</body>
+  </script></body>
 </html>
