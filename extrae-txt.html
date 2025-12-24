@@ -14,8 +14,25 @@
       <title>Separador de campos por ":"</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    textarea { width: 100%; min-height: 220px; margin-bottom: 10px; padding: 8px; }
-    button { padding: 10px 15px; margin-right: 10px; }
+    .contenedor {
+      display: flex;              /* coloca los elementos en fila */
+      gap: 20px;                  /* espacio entre los campos */
+    }
+    .campo {
+      flex: 1;                    /* cada campo ocupa el mismo ancho */
+      display: flex;
+      flex-direction: column;     /* etiqueta arriba, textarea abajo */
+    }
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 8px;
+      resize: vertical;           /* permite ajustar altura */
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
   </style>
   </head>
   <body style="font-size: 10px">
@@ -30,29 +47,26 @@
 
   <h2>Procesar texto con formato "Etiqueta: valor"</h2>
 
-  <label>Texto de entrada:</label>
-  <textarea id="input" placeholder="Pega aquí tu texto con campos separados por ':'"></textarea>
+  <div class="contenedor">
+    <div class="campo">
+      <label for="input">Texto de entrada:</label>
+      <textarea id="input" placeholder="Escribe o pega aquí tu texto con campos separados por ':'"></textarea>
+    </div>
 
-  <div>
-    <button onclick="procesar()">Procesar</button>
-    <button onclick="copiar()">Copiar resultado</button>
-    <button onclick="limpiar()">Limpiar</button>
+    <div class="campo">
+      <label for="output">Resultado:</label>
+      <textarea id="output" readonly placeholder="Aquí aparecerá el texto separado"></textarea>
+    </div>
   </div>
-
-  <label>Resultado:</label>
-  <textarea id="output" readonly placeholder="Aquí aparecerá el texto separado"></textarea>
 
   <script>
     function procesar(texto) {
-      // Busca todas las ocurrencias de "Etiqueta: valor"
       const regex = /([\p{L}\p{M}\s\-]+):\s*([^/]+)(?=\/|$)/gu;
       const matches = [...texto.matchAll(regex)];
-
       const resultado = matches.map(m => `${m[1].trim()}: ${m[2].trim()}`).join("\n");
       document.getElementById("output").value = resultado;
     }
 
-    // Procesa automáticamente cada vez que el campo cambia
     document.getElementById("input").addEventListener("input", (event) => {
       const texto = event.target.value;
       if (texto.length > 0) {
@@ -62,6 +76,5 @@
       }
     });
   </script>
-    <script src="index.js"></script>
   </body>
 </html>
