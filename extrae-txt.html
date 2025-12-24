@@ -15,26 +15,34 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .contenedor {
-      display: flex;              /* coloca los elementos en fila */
-      gap: 20px;                  /* espacio entre los campos */
+      display: flex;
+      gap: 20px;
     }
     .campo {
-      flex: 1;                    /* cada campo ocupa el mismo ancho */
+      flex: 1;
       display: flex;
-      flex-direction: column;     /* etiqueta arriba, textarea abajo */
+      flex-direction: column;
     }
-    textarea {
+    .editor, .resultado {
       width: 100%;
-      min-height: 300px;
+      min-height: 200px;
       padding: 8px;
-      resize: vertical;           /* permite ajustar altura */
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
     }
-    label {
-      font-weight: bold;
-      margin-bottom: 6px;
+    .editor { background: #fff; }
+    .resultado { background: #f9f9f9; }
+    label { font-weight: bold; margin-bottom: 6px; }
+    .label { color: #0066cc; }   /* azul */
+    .number { color: #2e7d32; }  /* verde */
+    .letters { color: #d35400; } /* naranja */
+    .switch-container {
+      margin-bottom: 15px;
     }
-  </style>
-  </head>
+  </style>  </head>
   <body style="font-size: 10px">
     <!-- navbar -->
     <nav class="nav nav-tabs mb-3 bg-light container">
@@ -45,17 +53,25 @@
     </nav>
     <!-- fin navbar -->
 
-  <h2>Procesar texto con formato "Etiqueta: valor"</h2>
+  <h2>Procesar texto con switch de colores</h2>
+
+  <div class="switch-container">
+    <label>
+      <input type="checkbox" id="colorSwitch" checked>
+      Activar colores
+    </label>
+  </div>
 
   <div class="contenedor">
     <div class="campo">
       <label for="input">Texto de entrada:</label>
-      <textarea id="input" placeholder="Escribe o pega aquí tu texto con campos separados por ':'"></textarea>
+      <div id="input" class="editor" contenteditable="true"
+           placeholder="Escribe o pega aquí tu texto con campos separados por ':'"></div>
     </div>
 
     <div class="campo">
       <label for="output">Resultado:</label>
-      <textarea id="output" readonly placeholder="Aquí aparecerá el texto separado"></textarea>
+      <div id="output" class="resultado"></div>
     </div>
   </div>
 
@@ -63,16 +79,45 @@
     function procesar(texto) {
       const regex = /([\p{L}\p{M}\s\-]+):\s*([^/]+)(?=\/|$)/gu;
       const matches = [...texto.matchAll(regex)];
-      const resultado = matches.map(m => `${m[1].trim()}: ${m[2].trim()}`).join("\n");
-      document.getElementById("output").value = resultado;
+      const useColors = document.getElementById("colorSwitch").checked;
+
+      const resultado = matches.map(m => {
+        const label = useColors
+          ? `<span class="label">${m[1].trim()}:</span>`
+          : `${m[1].trim()}:`;
+        const value = m[2].trim();
+
+        if (useColors) {
+          if (/^[0-9]+$/.test(value)) {
+            return `${label} <span class="number">${value}</span>`;
+          } else if (/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/.test(value)) {
+            return `${label} <span class="letters">${value}</span>`;
+          } else {
+            return `${label} ${value}`;
+          }
+        } else {
+          return `${label} ${value}`;
+        }
+      }).join("\n");
+
+      document.getElementById("output").innerHTML = resultado;
     }
 
+    // Procesa automáticamente cada vez que cambia el campo
     document.getElementById("input").addEventListener("input", (event) => {
-      const texto = event.target.value;
+      const texto = event.target.innerText;
       if (texto.length > 0) {
         procesar(texto);
       } else {
-        document.getElementById("output").value = "";
+        document.getElementById("output").innerHTML = "";
+      }
+    });
+
+    // Reprocesa cuando se cambia el switch
+    document.getElementById("colorSwitch").addEventListener("change", () => {
+      const texto = document.getElementById("input").innerText;
+      if (texto.length > 0) {
+        procesar(texto);
       }
     });
   </script>
