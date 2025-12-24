@@ -21,9 +21,9 @@
   <body style="font-size: 10px">
     <!-- navbar -->
     <nav class="nav nav-tabs mb-3 bg-light container">
-      <a class="nav-item nav-link" href="#">Tabla</a>
+      <a class="nav-item nav-link active" href="#">Tabla</a>
       <a class="nav-item nav-link" href="./dashboard.html">DashBoard</a>
-      <a class="nav-item nav-link active" href="./extrae-txt.html">extrae-txt</a>
+      <a class="nav-item nav-link" href="./extrae-txt.html">extrae-txt</a>
       <a class="nav-item nav-link" href="./index2.html">Tabla-Filtro</a>
     </nav>
     <!-- fin navbar -->
@@ -52,16 +52,16 @@
       document.getElementById("output").value = resultado;
     }
 
-    // Procesa automáticamente al pegar
-    document.getElementById("input").addEventListener("paste", (event) => {
-      setTimeout(() => {
-        const texto = event.target.value;
+    // Procesa automáticamente cada vez que el campo cambia
+    document.getElementById("input").addEventListener("input", (event) => {
+      const texto = event.target.value;
+      if (texto.length > 0) {
         procesar(texto);
-      }, 50); // pequeño delay para que el texto se inserte antes de procesar
+      } else {
+        document.getElementById("output").value = "";
+      }
     });
   </script>
-
-
     <script src="index.js"></script>
   </body>
 </html>
