@@ -376,7 +376,7 @@
       extraDiv.innerHTML = "";
       if (direccionValor) {
         const direccionEncoded = encodeURIComponent(direccionValor);
-        const mapsBtn = `<a href="https://www.google.com/maps/search/${direccionEncoded}" target="_blank" class="btn btn-sm btn-success">Ver en Google Maps</a>`;
+        const mapsBtn = `<a href="https://www.google.com/maps/dir/${direccionEncoded} bogota/Greenmovil" target="_blank" class="btn btn-sm btn-success">Ver en Google Maps</a>`;
         let tiempoTxt = "";
         if (fechaValor && horaValor) {
           tiempoTxt = `<span class="timeago">${calcularTiempo(fechaValor, horaValor)}</span>`;
