@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>txt procesar</title>
+  <title>📝txt procesar</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -29,7 +29,60 @@
     .number { color: #2e7d32; }  /* verde */
     .letters { color: #d35400; } /* naranja */
     .timeago { color: #9c27b0; font-style: italic; margin-left: 10px; }
-    .switch-container { margin-bottom: 15px; }
+    .label-resultado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(30px);
+    }
+    .toggle-label {
+      margin-left: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      user-select: none;
+    }
+    .toggle-container {
+      display: flex;
+      align-items: center;
+    }
   </style>
 </head>
 <body style="font-size: 10px">
@@ -92,25 +145,221 @@
       const matches = [...texto.matchAll(regex)];
       const useColors = document.getElementById("colorSwitch").checked;
 
+      // Función para normalizar etiquetas para comparación
+      function normalizarEtiqueta(etq) {
+        return etq.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      }
+
+      // Crear un array de todos los campos extraídos
+      const todosLosCampos = matches.map(m => ({
+        etiqueta: m[1].trim(),
+        value: m[2].trim()
+      }));
+
+      // Secuencia de orden deseada con etiquetas de salida y posibles variaciones de entrada
+      const ordenCampos = [
+        { etiquetaSalida: "Detalle del reporte", keys: ["detalle del reporte"], esTitulo: true },
+        { etiquetaSalida: "Nombre de contacto", keys: ["nombre de contacto", "reporta", "contacto"], valorFijo: "AuxiliarSTS" },
+        { etiquetaSalida: "Teléfono de contacto", keys: ["telefono de contacto", "telefono", "tel"], valorFijo: "3242911287" },
+        { etiquetaSalida: "Tabla", keys: ["tabla"] },
+        { etiquetaSalida: "Ruta", keys: ["ruta"] },
+        { etiquetaSalida: "Viaje", keys: ["viaje"] },
+        { etiquetaSalida: "Servicio", keys: ["servicio"], valorFijo: "Zonal" },
+        { etiquetaSalida: "Descripción del reporte", keys: ["descripcion del reporte", "descripcion"] },
+        { etiquetaSalida: "Fecha y hora de novedad", keys: ["fecha y hora de novedad", "fecha", "hora"], esCombinado: true },
+        { etiquetaSalida: "Código operador (si aplica)", keys: ["codigo operador", "operador", "codigo"] },
+        { etiquetaSalida: "La Novedad es intermitente o durante toda la ruta?", keys: ["la novedad es intermitente o durante toda la ruta", "intermitente"], valorFijo: "Durante la ruta" },
+        { etiquetaSalida: "Ubicación aproximada de la novedad", keys: ["ubicacion aproximada de la novedad", "ubicacion aproximada", "direccion", "dirección"] }
+      ];
+
       let direccionValor = null;
       let fechaValor = null;
       let horaValor = null;
 
-      const resultadoColores = matches.map(m => {
-        const etiqueta = m[1].trim();
+      // Buscar valores para "Fecha y hora de novedad" combinado
+      let fechaCombinada = null;
+      let horaCombinada = null;
+      todosLosCampos.forEach(c => {
+        const etqNorm = normalizarEtiqueta(c.etiqueta);
+        if (etqNorm.includes("fecha y hora de novedad")) {
+          fechaCombinada = c.value;
+        } else if (etqNorm === "fecha") {
+          fechaValor = c.value;
+        } else if (etqNorm === "hora") {
+          horaValor = c.value;
+        }
+      });
+
+      // Reordenar campos según la secuencia - SIEMPRE mostrar todos
+      const camposOrdenados = [];
+      const camposUsados = new Set();
+      let fechaIdxUsado = -1;
+      let horaIdxUsado = -1;
+
+      // Recorrer la secuencia de orden y buscar campos coincidentes
+      ordenCampos.forEach(item => {
+        let campoEncontrado = null;
+        let indicesEncontrados = [];
+
+        // Si es "Fecha y hora de novedad" combinado, buscar primero el combinado, luego combinar Fecha y Hora
+        if (item.esCombinado) {
+          // Buscar campo combinado completo
+          for (const ordenKey of item.keys) {
+            if (ordenKey.includes("fecha y hora")) {
+              const resultado = todosLosCampos.find((c, idx) => {
+                if (camposUsados.has(idx)) return false;
+                const etqNorm = normalizarEtiqueta(c.etiqueta);
+                return etqNorm.includes("fecha y hora de novedad");
+              });
+              if (resultado) {
+                campoEncontrado = resultado;
+                indicesEncontrados.push(todosLosCampos.indexOf(resultado));
+                break;
+              }
+            }
+          }
+
+          // Si no se encontró combinado, buscar Fecha y Hora por separado
+          if (!campoEncontrado && fechaValor && horaValor) {
+            const fechaIdx = todosLosCampos.findIndex((c, idx) => 
+              !camposUsados.has(idx) && normalizarEtiqueta(c.etiqueta) === "fecha"
+            );
+            const horaIdx = todosLosCampos.findIndex((c, idx) => 
+              !camposUsados.has(idx) && normalizarEtiqueta(c.etiqueta) === "hora"
+            );
+            
+            if (fechaIdx >= 0 && horaIdx >= 0) {
+              campoEncontrado = {
+                etiqueta: item.etiquetaSalida,
+                value: `${fechaValor} ${horaValor}`
+              };
+              indicesEncontrados.push(fechaIdx, horaIdx);
+              fechaIdxUsado = fechaIdx;
+              horaIdxUsado = horaIdx;
+            }
+          }
+        } else {
+          // Buscar campo coincidente normal
+          for (const ordenKey of item.keys) {
+            const resultado = todosLosCampos.find((c, idx) => {
+              // Si es Fecha o Hora y ya se usaron para el campo combinado, ignorarlos
+              if (idx === fechaIdxUsado || idx === horaIdxUsado) return false;
+              if (camposUsados.has(idx)) return false;
+              
+              const etqNorm = normalizarEtiqueta(c.etiqueta);
+              
+              // Mapeos específicos
+              // Si estamos buscando "Operador", solo coincidir con "operador" exacto
+              if (item.etiquetaSalida.includes("operador")) {
+                return etqNorm === "operador" || etqNorm === "codigo operador";
+              }
+              
+              // Si estamos buscando "Dirección" o "Ubicación", usar esos campos específicamente
+              if (item.etiquetaSalida.includes("Ubicación")) {
+                return etqNorm.includes("direccion") || etqNorm.includes("ubicacion");
+              }
+              
+              // Si estamos buscando "Nombre de contacto", buscar "reporta"
+              if (item.etiquetaSalida.includes("Nombre de contacto")) {
+                return etqNorm === "reporta" || etqNorm.includes("nombre de contacto") || etqNorm.includes("contacto");
+              }
+              
+              // Comparación general
+              return etqNorm === ordenKey || etqNorm.includes(ordenKey) || ordenKey.includes(etqNorm);
+            });
+
+            if (resultado) {
+              campoEncontrado = resultado;
+              indicesEncontrados.push(todosLosCampos.indexOf(resultado));
+              break;
+            }
+          }
+        }
+
+        // Agregar el campo encontrado, valor fijo, o uno vacío
+        // Si tiene valor fijo, siempre usar ese valor (ignora el input)
+        if (item.valorFijo) {
+          camposOrdenados.push({
+            etiqueta: item.etiquetaSalida,
+            value: item.valorFijo
+          });
+        } else if (campoEncontrado) {
+          camposOrdenados.push({
+            etiqueta: item.etiquetaSalida,
+            value: campoEncontrado.value
+          });
+          
+          indicesEncontrados.forEach(idx => {
+            if (idx >= 0) camposUsados.add(idx);
+          });
+
+          // Mantener compatibilidad con funcionalidad existente
+          const etqNorm = normalizarEtiqueta(campoEncontrado.etiqueta || item.etiquetaSalida);
+          if (etqNorm.includes("direccion") || etqNorm.includes("ubicacion")) {
+            direccionValor = campoEncontrado.value;
+          }
+        } else {
+          // Campo no encontrado, agregarlo vacío
+          camposOrdenados.push({
+            etiqueta: item.etiquetaSalida,
+            value: "",
+            esVacio: true
+          });
+        }
+      });
+
+      // Buscar dirección para Google Maps (puede venir de cualquier campo relacionado)
+      if (!direccionValor) {
+        todosLosCampos.forEach(c => {
+          const etqNorm = normalizarEtiqueta(c.etiqueta);
+          if (etqNorm.includes("direccion") || etqNorm.includes("ubicacion")) {
+            direccionValor = c.value;
+          }
+        });
+      }
+
+      // Extraer descripción del reporte del texto inicial si no viene como campo
+      const descripcionCampo = camposOrdenados.find(c => normalizarEtiqueta(c.etiqueta).includes("descripcion"));
+      if (descripcionCampo) {
+        if (!descripcionCampo.value) {
+          // Buscar texto antes del primer campo con ":"
+          const primerMatch = matches[0];
+          if (primerMatch) {
+            const inicioTexto = texto.substring(0, texto.indexOf(primerMatch[0])).trim();
+            // Limpiar texto inicial: remover **, / al final, y espacios extra
+            descripcionCampo.value = inicioTexto
+              .replace(/\*\*/g, "")           // Remover asteriscos dobles
+              .replace(/\/\s*$/, "")          // Remover "/" al final con espacios
+              .replace(/\s+/g, " ")           // Reemplazar múltiples espacios por uno
+              .trim();
+          }
+        }
+        // Limpiar "Novedades SIRCI" del texto (si existe valor, tanto extraído como del input)
+        if (descripcionCampo.value) {
+          descripcionCampo.value = descripcionCampo.value
+            .replace(/Novedades SIRCI/gi, "")  // Remover "Novedades SIRCI" (case insensitive)
+            .replace(/\s+/g, " ")              // Reemplazar múltiples espacios por uno
+            .trim();
+        }
+      }
+
+      // Generar HTML de salida
+      const resultadoColores = camposOrdenados.map(campo => {
+        // Si es el título, mostrarlo sin valor
+        if (campo.esTitulo) {
+          return "<strong>Detalle del reporte</strong>";
+        }
+
+        const etiqueta = campo.etiqueta;
+        const value = campo.value || "";
         const label = useColors
           ? `<span class="label">${etiqueta}:</span>`
           : `${etiqueta}:`;
-        const value = m[2].trim();
-
-        if (etiqueta.toLowerCase() === "dirección") direccionValor = value;
-        if (etiqueta.toLowerCase() === "fecha") fechaValor = value;
-        if (etiqueta.toLowerCase() === "hora") horaValor = value;
 
         if (useColors) {
-          if (/^[0-9]+$/.test(value)) {
+          if (value && /^[0-9]+$/.test(value)) {
             return `${label} <span class="number">${value}</span>`;
-          } else if (/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/.test(value)) {
+          } else if (value && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/.test(value)) {
             return `${label} <span class="letters">${value}</span>`;
           } else {
             return `${label} ${value}`;
