@@ -79,7 +79,7 @@
                 canvas.height = img.height * scale;
                 canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                const b64 = canvas.toDataURL('image/jpeg', 0.8);
+                const b64 = canvas.toDataURL('image/jpeg', 0.9);
                 imagesData[index] = b64;
                 zone.innerHTML = `<img src="${b64}">`;
                 if (imagesData.every(i => i !== null)) document.getElementById('status').style.display = 'block';
