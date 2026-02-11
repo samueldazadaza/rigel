@@ -3,213 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador PDF Pro - Landscape</title>
+    <title>PDF con Encabezados - Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root {
-            --primary: #1e293b;
-            --accent: #3b82f6;
-            --success: #10b981;
-            --bg: #f1f5f9;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .card {
-            background: white;
-            width: 100%;
-            max-width: 900px;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: var(--primary);
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 800;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #475569;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100px;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            resize: none;
-            box-sizing: border-box;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .drop-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .drop-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #f8fafc;
-            cursor: pointer;
-            transition: all 0.3s;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .drop-zone:hover {
-            border-color: var(--accent);
-            background: #eff6ff;
-        }
-
-        .drop-zone img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        .drop-zone span {
-            font-size: 0.9rem;
-            color: #64748b;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .btn-container {
-            text-align: center;
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 40px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        button:hover {
-            background-color: #0f172a;
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        #status-msg {
-            color: var(--success);
-            text-align: center;
-            margin-top: 15px;
-            font-weight: 600;
-            display: none;
-        }
+        :root { --primary: #1e293b; --accent: #3b82f6; --bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 40px 20px; }
+        .card { background: white; max-width: 900px; margin: 0 auto; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); }
+        .input-group { margin-bottom: 20px; }
+        textarea { width: 100%; height: 80px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        .drop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .drop-zone { border: 2px dashed #cbd5e1; height: 160px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #f8fafc; overflow: hidden; border-radius: 10px; }
+        .drop-zone img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        button { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        button:hover { background: #000; }
+        #status { text-align: center; color: #10b981; margin-top: 10px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>Generador PDF A4 Horizontal</h1>
+    <h1>Generador de Reporte A4</h1>
 
     <div class="input-group">
-        <label for="texto">Descripción o Título</label>
-        <textarea id="texto" placeholder="Escribe aquí el contenido que irá en la parte superior..."></textarea>
+        <label><b>Contenido General:</b></label>
+        <textarea id="texto" placeholder="Escribe el nombre del proyecto o descripción..."></textarea>
     </div>
 
-    <label>Carga tus 3 imágenes (Arrastra o haz clic)</label>
+    <div id="config-encabezados" style="display:none;">
+        <span id="txt-h1">Encabezado Hoja 1</span>
+        <span id="txt-h2">Encabezado Hoja 2</span>
+        <span id="txt-h3">Encabezado Hoja 3</span>
+        <span id="txt-fijo-derecha">PROYECTO: </span>
+    </div>
+
     <div class="drop-grid">
-        <div class="drop-zone" id="dz-1">
-            <span>📷 Foto 1<br><small>Haga clic o arrastre</small></span>
-            <input type="file" hidden accept="image/*">
-        </div>
-        <div class="drop-zone" id="dz-2">
-            <span>📷 Foto 2<br><small>Haga clic o arrastre</small></span>
-            <input type="file" hidden accept="image/*">
-        </div>
-        <div class="drop-zone" id="dz-3">
-            <span>📷 Foto 3<br><small>Haga clic o arrastre</small></span>
-            <input type="file" hidden accept="image/*">
-        </div>
+        <div class="drop-zone" id="dz-1"><span>Foto 1</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-2"><span>Foto 2</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-3"><span>Foto 3</span><input type="file" hidden accept="image/*"></div>
     </div>
 
-    <div id="status-msg">✅ ¡Imágenes procesadas y optimizadas!</div>
-
-    <div class="btn-container">
-        <button onclick="generarPDF()">Generar y Descargar PDF</button>
-    </div>
+    <div id="status">✅ Imágenes listas</div>
+    <button onclick="generarPDF()">Descargar PDF con Encabezados</button>
 </div>
 
 <script>
     const imagesData = [null, null, null];
 
-    // Configuración de Drag & Drop
     document.querySelectorAll('.drop-zone').forEach((zone, index) => {
         const input = zone.querySelector('input');
-
         zone.onclick = () => input.click();
-
-        zone.ondragover = (e) => {
-            e.preventDefault();
-            zone.style.borderColor = "#3b82f6";
-        };
-
-        zone.ondragleave = () => {
-            zone.style.borderColor = "#cbd5e1";
-        };
-
+        zone.ondragover = (e) => { e.preventDefault(); zone.style.borderColor = "#3b82f6"; };
         zone.ondrop = (e) => {
             e.preventDefault();
-            zone.style.borderColor = "#cbd5e1";
-            if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0], index, zone);
-            }
+            if (e.dataTransfer.files.length) procesar(e.dataTransfer.files[0], index, zone);
         };
-
-        input.onchange = () => {
-            if (input.files.length) {
-                handleFile(input.files[0], index, zone);
-            }
-        };
+        input.onchange = () => { if (input.files.length) procesar(input.files[0], index, zone); };
     });
 
-    // Optimización de imagen (Compresión + Redimensionamiento)
-    async function handleFile(file, index, zone) {
+    async function procesar(file, index, zone) {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (e) => {
@@ -217,91 +69,82 @@
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                // Límite de resolución para mantener bajo peso (< 1MB total)
-                const MAX_W = 1200;
+                // CALIDAD AJUSTADA: 1800px para nitidez
+                const MAX_W = 1800; 
                 const scale = MAX_W / img.width;
                 canvas.width = MAX_W;
                 canvas.height = img.height * scale;
-
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Compresión JPEG al 70%
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                imagesData[index] = compressedBase64;
-                
-                // Vista previa
-                zone.innerHTML = `<img src="${compressedBase64}">`;
-                
-                if (imagesData.every(img => img !== null)) {
-                    document.getElementById('status-msg').style.display = 'block';
-                }
+                // CALIDAD AJUSTADA: 0.8 para mejor balance
+                const b64 = canvas.toDataURL('image/jpeg', 0.8);
+                imagesData[index] = b64;
+                zone.innerHTML = `<img src="${b64}">`;
+                if (imagesData.every(i => i !== null)) document.getElementById('status').style.display = 'block';
             };
         };
     }
 
-    // Generación del PDF
+    function dibujarEncabezados(doc, numPagina, variableTexto) {
+        const textoFijoDerecha = document.getElementById('txt-fijo-derecha').innerText;
+        const encabezadoIzquierdo = document.getElementById(`txt-h${numPagina}`).innerText;
+        
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+
+        // Izquierda (5mm, 5mm)
+        doc.text(encabezadoIzquierdo, 5, 8);
+
+        // Derecha (Casi al borde 297mm - 5mm = 292mm)
+        const textoDerecha = textoFijoDerecha + variableTexto.slice(0, 40);
+        doc.text(textoDerecha, 292, 8, { align: 'right' });
+        
+        doc.setTextColor(0); // Reset color a negro para el resto
+    }
+
     function generarPDF() {
         const { jsPDF } = window.jspdf;
-        // 'l' para horizontal (Landscape)
-        const doc = new jsPDF({
-            orientation: 'l',
-            unit: 'mm',
-            format: 'a4'
+        const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' });
+        const textoInput = document.getElementById('texto').value || "Sin Titulo";
+        const margenLateral = 20;
+
+        imagesData.forEach((img, i) => {
+            if (i > 0) doc.addPage('a4', 'l');
+            
+            // 1. Dibujar Encabezados (se repite en cada página)
+            dibujarEncabezados(doc, i + 1, textoInput);
+
+            // 2. Título principal (solo en la primera hoja si lo deseas, o en todas)
+            if (i === 0) {
+                doc.setFontSize(14);
+                const lines = doc.splitTextToSize(textoInput, 257);
+                doc.text(lines, margenLateral, 25);
+                var yOffset = 35 + (lines.length * 5);
+            } else {
+                var yOffset = 20;
+            }
+
+            // 3. Imagen con Proporción
+            if (img) {
+                const props = doc.getImageProperties(img);
+                const ratio = props.width / props.height;
+                let w = 257; 
+                let h = w / ratio;
+
+                // Ajuste si la imagen es muy alta
+                if (h > (210 - yOffset - 15)) {
+                    h = 210 - yOffset - 15;
+                    w = h * ratio;
+                }
+                doc.addImage(img, 'JPEG', margenLateral, yOffset, w, h);
+            }
         });
 
-        const margen = 20; // 2 cm
-        const pageWidth = 297; 
-        const pageHeight = 210;
-        const contentWidth = pageWidth - (margen * 2);
-        
-        const textoOriginal = document.getElementById('texto').value || "Documento_Sin_Titulo";
-
-        // 1. Crear nombre de archivo dinámico
-        const textoLimpio = textoOriginal.slice(0, 20).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        // Nombre de archivo con Fecha y Hora
         const ahora = new Date();
-        const timestamp = `${ahora.getFullYear()}${(ahora.getMonth()+1).toString().padStart(2,'0')}${ahora.getDate().toString().padStart(2,'0')}_${ahora.getHours()}${ahora.getMinutes()}`;
-        const nombreFinal = `${textoLimpio}_${timestamp}.pdf`;
-
-        // 2. Agregar el texto al PDF
-        doc.setFontSize(14);
-        const splitTitle = doc.splitTextToSize(textoOriginal, contentWidth);
-        doc.text(splitTitle, margen, margen + 5);
-        
-        let yCursor = margen + 10 + (splitTitle.length * 7);
-
-        // 3. Agregar Imágenes manteniendo proporción
-        imagesData.forEach((imgBase64, i) => {
-            if (!imgBase64) return;
-
-            // Si no es la primera imagen o ya no hay espacio, nueva página
-            if (i > 0 || yCursor > 160) {
-                doc.addPage('a4', 'l');
-                yCursor = margen;
-            }
-
-            const props = doc.getImageProperties(imgBase64);
-            const ratio = props.width / props.height;
-
-            let targetW = contentWidth;
-            let targetH = targetW / ratio;
-
-            // Verificación para que no se salga del alto de la página
-            const maxAvailableH = pageHeight - yCursor - margen;
-            if (targetH > maxAvailableH) {
-                targetH = maxAvailableH;
-                targetW = targetH * ratio;
-            }
-
-            doc.addImage(imgBase64, 'JPEG', margen, yCursor, targetW, targetH);
-            yCursor += targetH + 10;
-        });
-
-        // 4. Descargar
-        doc.save(nombreFinal);
+        const stamp = `${ahora.getHours()}${ahora.getMinutes()}_${ahora.getDate()}-${ahora.getMonth()+1}`;
+        doc.save(`Reporte_${stamp}.pdf`);
     }
 </script>
-
 </body>
 </html>
