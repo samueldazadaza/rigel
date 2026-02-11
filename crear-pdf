@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador PDF Liviano</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
+        input, textarea { width: 100%; margin-bottom: 15px; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>PDF Maker (Max 1MB)</h2>
+    <input type="file" id="fotos" multiple accept="image/*">
+    <textarea id="texto" placeholder="Escribe la descripción aquí..."></textarea>
+    <button onclick="generarPDF()">Descargar PDF</button>
+
+    <script>
+        async function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const input = document.getElementById('fotos');
+            const texto = document.getElementById('texto').value;
+            
+            // 1. Agregar Texto
+            doc.text(texto, 10, 20);
+
+            // 2. Procesar Imágenes (Máximo 3)
+            const files = Array.from(input.files).slice(0, 3);
+            let yOffset = 40;
+
+            for (const file of files) {
+                const imgData = await optimizarImagen(file);
+                doc.addImage(imgData, 'JPEG', 10, yOffset, 180, 70); // Ancho 180mm, Alto 70mm
+                yOffset += 80;
+            }
+
+            doc.save("documento_optimizado.pdf");
+        }
+
+        function optimizarImagen(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Redimensionar a un ancho máximo de 1000px para ahorrar espacio
+                        const scale = 1000 / img.width;
+                        canvas.width = 1000;
+                        canvas.height = img.height * scale;
+
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Calidad 0.7 es el punto dulce entre peso y nitidez
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                };
+            });
+        }
+    </script>
+</body>
+</html>
+                      
