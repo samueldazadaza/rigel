@@ -145,9 +145,9 @@
         // Nombre de archivo: texto + fecha_hora
         const ahora = new Date();
         const textoLimpio = textoInput.slice(0, 15).replace(/[^a-z0-9]/gi, '_');
-        const stamp = `${ahora.getDate()}-${ahora.getMonth()+1}_${ahora.getHours()}${ahora.getMinutes()}`;
+        const stamp = `${ahora.getYear()}-${ahora.getMonth()}-${ahora.getDate()+1}_${ahora.getHours()}${ahora.getMinutes()}`;
         
-        doc.save(`${textoLimpio}_${stamp}.pdf`);
+        doc.save(`${textoLimpio}__${stamp}.pdf`);
     }
 </script>
 </body>
