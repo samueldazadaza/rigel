@@ -2,68 +2,150 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Generador PDF Liviano</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Generator Pro - A4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
-        input, textarea { width: 100%; margin-bottom: 15px; }
-        button { background: #2563eb; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        h2 { text-align: center; color: var(--primary); }
+        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; resize: none; box-sizing: border-box; }
+
+        .drop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .drop-zone { 
+            border: 2px dashed #cbd5e1; border-radius: 8px; height: 150px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; position: relative; overflow: hidden; background: #f1f5f9;
+        }
+        .drop-zone.hover { border-color: var(--primary); background: #eff6ff; }
+        .drop-zone img { width: 100%; height: 100%; object-fit: contain; }
+        .drop-zone span { font-size: 0.8rem; color: #64748b; text-align: center; padding: 10px; }
+
+        .controls { text-align: center; margin-top: 20px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #1d4ed8; }
+        
+        #preview-status { font-size: 0.9rem; color: #10b981; margin-top: 10px; text-align: center; display: none; }
     </style>
 </head>
 <body>
-    <h2>PDF Maker (Max 1MB)</h2>
-    <input type="file" id="fotos" multiple accept="image/*">
-    <textarea id="texto" placeholder="Escribe la descripción aquí..."></textarea>
-    <button onclick="generarPDF()">Descargar PDF</button>
 
-    <script>
-        async function generarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const input = document.getElementById('fotos');
-            const texto = document.getElementById('texto').value;
+<div class="container">
+    <h2>Generador de PDF A4</h2>
+    
+    <label>Texto del documento:</label>
+    <textarea id="texto" placeholder="Escribe aquí el contenido del PDF..."></textarea>
+
+    <div class="drop-grid">
+        <div class="drop-zone" id="dz-1"><span>Arrastra Foto 1</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-2"><span>Arrastra Foto 2</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-3"><span>Arrastra Foto 3</span><input type="file" hidden accept="image/*"></div>
+    </div>
+
+    <div id="preview-status">✅ Imágenes listas para procesar</div>
+
+    <div class="controls">
+        <button onclick="generarPDF()">Exportar PDF (A4)</button>
+    </div>
+</div>
+
+<script>
+    const imagesData = [null, null, null];
+
+    // Configuración de Zonas Drag & Drop
+    document.querySelectorAll('.drop-zone').forEach((zone, index) => {
+        const input = zone.querySelector('input');
+
+        zone.onclick = () => input.click();
+
+        zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('hover'); };
+        zone.ondragleave = () => zone.classList.remove('hover');
+        zone.ondrop = (e) => {
+            e.preventDefault();
+            zone.classList.remove('hover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0], index, zone);
+        };
+
+        input.onchange = () => {
+            if (input.files.length) handleFile(input.files[0], index, zone);
+        };
+    });
+
+    async function handleFile(file, index, zone) {
+        const optimized = await optimizarImagen(file);
+        imagesData[index] = optimized;
+        zone.innerHTML = `<img src="${optimized}">`;
+        checkStatus();
+    }
+
+    function checkStatus() {
+        if (imagesData.every(img => img !== null)) {
+            document.getElementById('preview-status').style.display = 'block';
+        }
+    }
+
+    function optimizarImagen(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 1200;
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            };
+        });
+    }
+
+    async function generarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        
+        const margen = 20; // 2 cm
+        const pageWidth = 210;
+        const contentWidth = pageWidth - (margen * 2);
+        const texto = document.getElementById('texto').value;
+
+        // 1. Texto (con ajuste de línea automático)
+        doc.setFontSize(12);
+        const textLines = doc.splitTextToSize(texto, contentWidth);
+        doc.text(textLines, margen, margen + 10);
+        
+        let yCursor = margen + 20 + (textLines.length * 5);
+
+        // 2. Imágenes manteniendo proporción
+        for (const imgBase64 of imagesData) {
+            if (!imgBase64) continue;
+
+            const imgProps = doc.getImageProperties(imgBase64);
+            const ratio = imgProps.width / imgProps.height;
             
-            // 1. Agregar Texto
-            doc.text(texto, 10, 20);
+            // Calculamos alto basado en el ancho disponible (contentWidth)
+            let displayWidth = contentWidth;
+            let displayHeight = displayWidth / ratio;
 
-            // 2. Procesar Imágenes (Máximo 3)
-            const files = Array.from(input.files).slice(0, 3);
-            let yOffset = 40;
-
-            for (const file of files) {
-                const imgData = await optimizarImagen(file);
-                doc.addImage(imgData, 'JPEG', 10, yOffset, 180, 70); // Ancho 180mm, Alto 70mm
-                yOffset += 80;
+            // Si la imagen es muy larga y se sale de la página, la ajustamos
+            if (yCursor + displayHeight > 270) {
+                doc.addPage();
+                yCursor = margen;
             }
 
-            doc.save("documento_optimizado.pdf");
+            doc.addImage(imgBase64, 'JPEG', margen, yCursor, displayWidth, displayHeight);
+            yCursor += displayHeight + 10; // Espacio entre fotos
         }
 
-        function optimizarImagen(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Redimensionar a un ancho máximo de 1000px para ahorrar espacio
-                        const scale = 1000 / img.width;
-                        canvas.width = 1000;
-                        canvas.height = img.height * scale;
-
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        // Calidad 0.7 es el punto dulce entre peso y nitidez
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                };
-            });
-        }
-    </script>
+        doc.save("Reporte_Optimizado.pdf");
+    }
+</script>
 </body>
 </html>
-                      
