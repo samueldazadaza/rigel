@@ -23,28 +23,28 @@
 <body>
 
 <div class="card">
-    <h1>Generador de Reporte A4</h1>
+    <h1>Generador de pdf mtto preventivo sts</h1>
 
     <div class="input-group">
         <label><b>Contenido General:</b></label>
-        <textarea id="texto" placeholder="Escribe el nombre del proyecto o descripción..."></textarea>
+        <textarea id="texto" placeholder="Escribe el id del bus, por ej: Z67-4111"></textarea>
     </div>
 
     <div id="config-encabezados" style="display:none;">
-        <span id="txt-h1">Encabezado Hoja 1</span>
-        <span id="txt-h2">Encabezado Hoja 2</span>
-        <span id="txt-h3">Encabezado Hoja 3</span>
-        <span id="txt-fijo-derecha">PROYECTO: </span>
+        <span id="txt-h1">Evidencia de información SSD</span>
+        <span id="txt-h2">Evidencia de camaras activas</span>
+        <span id="txt-h3">Evidencia de grabaciones</span>
+        <span id="txt-fijo-derecha">Mantenimiento Preventivo STS movil: </span>
     </div>
 
     <div class="drop-grid">
-        <div class="drop-zone" id="dz-1"><span>Foto 1</span><input type="file" hidden accept="image/*"></div>
-        <div class="drop-zone" id="dz-2"><span>Foto 2</span><input type="file" hidden accept="image/*"></div>
-        <div class="drop-zone" id="dz-3"><span>Foto 3</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-1"><span>Foto 1. SSD</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-2"><span>Foto 2. CAM</span><input type="file" hidden accept="image/*"></div>
+        <div class="drop-zone" id="dz-3"><span>Foto 3. GRAB</span><input type="file" hidden accept="image/*"></div>
     </div>
 
     <div id="status">✅ Imágenes listas</div>
-    <button onclick="generarPDF()">Descargar PDF con Encabezados</button>
+    <button onclick="generarPDF()">Descargar PDF</button>
 </div>
 
 <script>
@@ -115,14 +115,14 @@
             dibujarEncabezados(doc, i + 1, textoInput);
 
             // 2. Título principal (solo en la primera hoja si lo deseas, o en todas)
-            if (i === 0) {
-                doc.setFontSize(14);
-                const lines = doc.splitTextToSize(textoInput, 257);
-                doc.text(lines, margenLateral, 25);
-                var yOffset = 35 + (lines.length * 5);
-            } else {
-                var yOffset = 20;
-            }
+            //if (i === 0) {
+                //doc.setFontSize(14);
+               // const lines = doc.splitTextToSize(textoInput, 257);
+               // doc.text(lines, margenLateral, 25);
+               // var yOffset = 35 + (lines.length * 5);
+            //} else {
+               // var yOffset = 20;
+            //}
 
             // 3. Imagen con Proporción
             if (img) {
