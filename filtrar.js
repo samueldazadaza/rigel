@@ -2,13 +2,18 @@
 const urlrigel = 'https://api-rigel2.vercel.app/';
 //const urlp60 = 'https://raw.githubusercontent.com/samueldazadaza/api-rigel/main/P60todos.txt';
 //const urlp60 = 'http://192.168.23.160:7000/api_P60';
-const urlp60 = 'http://10.0.22.50:8003/localizacion?idVehiculo=Z634002&coleccion=P20';
+//const urlp60 = 'http://10.0.22.50:8003/localizacion?idVehiculo=Z634002&coleccion=P20';
+const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
+
+
 
 
 // Objetos globales
 const datosrigelglobal = [];     // Incidentes desde Rigel
 const datosp60global = [];       // Vehículos desde P60
 const jsonEnriquecidoGlobal = []; // Array enriquecido externo
+
+
 
 
 // Función para obtener datos desde Rigel
@@ -24,6 +29,8 @@ async function funcionObtenerDatosRigel() {
 }
 
 
+
+
 // Función para obtener datos desde P60 (GitHub)
 async function funcionObtenerDatosP60() {
   try {
@@ -37,6 +44,8 @@ async function funcionObtenerDatosP60() {
 }
 
 
+
+
 // Función para enriquecer los datos de Rigel con los de P60
 function enriquecerDatos() {
   const enriquecido = datosrigelglobal.map((incidente) => {
@@ -44,6 +53,8 @@ function enriquecerDatos() {
       const idVehiculoFormateado = vehiculo.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
       return idVehiculoFormateado === incidente.vehicle_code;
     });
+
+
 
 
     return {
@@ -58,9 +69,13 @@ function enriquecerDatos() {
   });
 
 
+
+
   jsonEnriquecidoGlobal.push(...enriquecido);
   console.log("✅ JSON enriquecido generado");
 }
+
+
 
 
 // Función para mostrar los datos enriquecidos en HTML
@@ -68,11 +83,15 @@ const mostrarDatosEnriquecidos = (datos) => {
   const datosFiltrados = datos //.filter(item => item.vehicle_status === "INOPERATIVO"); //lo quite para evitar error de 2 filas faltantes en el html
 
 
+
+
 // Punto fijo de referencia
 const puntoReferencia = {
   lat: 4.700801,
   lng: -74.162544
 };
+
+
 
 
 // Función Haversine para calcular distancia en kilómetros
@@ -89,10 +108,14 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 }
 
 
+
+
 function generarFilasTabla(data) {
   return data.map((item, index) => {
     const lat = item.localizacionVehiculo?.latitud;
     const lng = item.localizacionVehiculo?.longitud;
+
+
 
 
     const gps = (lat && lng)
@@ -100,9 +123,13 @@ function generarFilasTabla(data) {
       : '-';
 
 
+
+
     const distancia = (lat && lng)
       ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, parseFloat(lat), parseFloat(lng)).toFixed(2)
       : '-';
+
+
 
 
     return `
@@ -124,10 +151,14 @@ function generarFilasTabla(data) {
 }
 
 
+
+
   const cuerpoTabla = generarFilasTabla(datosFiltrados);
   document.getElementById("tablaEnriquecida").innerHTML = cuerpoTabla;
   document.getElementById("loader").style.display = "none";
 }
+
+
 
 
 // Función principal para ejecutar todo
@@ -141,11 +172,12 @@ async function ejecutarProcesoCompleto() {
 
 
 
-
 function filtrarPorSistema() {
   const input = document.getElementById('filtroSistema');
   const filtro = input.value.toLowerCase();
   const filas = document.querySelectorAll('table tbody tr');
+
+
 
 
   filas.forEach(fila => {
@@ -154,11 +186,5 @@ function filtrarPorSistema() {
   });
 }
 
-
-
-
 // Ejecutar el proceso
-ejecutarProcesoCompleto();
-
-
-    
+ejecutarProcesoCompleto();              
