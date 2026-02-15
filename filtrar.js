@@ -102,6 +102,8 @@ function generarFilasTabla(data) {
       ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, parseFloat(lat), parseFloat(lng)).toFixed(2)
       : '-';
 
+    const tiempo = distancia * 4;
+
 
     return `
       <tr>
@@ -113,7 +115,7 @@ function generarFilasTabla(data) {
         <td>${item.days_off ?? '-'}</td>
         <td>${item.current_status || '-'}</td>
         <td>${item.idRuta || '-'}</td>
-        <td>${distancia} km / ${gps}</td>
+        <td>${distancia}km / (${tiempo}min) / ${gps}</td>
       </tr>
     `;
   }).join('');
