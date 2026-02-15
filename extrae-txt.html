@@ -1,415 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝txt procesar</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .contenedor { display: flex; gap: 20px; }
-    .campo { flex: 1; display: flex; flex-direction: column; }
-    .editor, .resultado {
-      width: 100%;
-      min-height: 200px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: Consolas, monospace;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-    }
-    .editor { background: #fff; }
-    .resultado { background: #f9f9f9; }
-    label { font-weight: bold; margin-bottom: 6px; }
-    .label { color: #0066cc; }   /* azul */
-    .number { color: #2e7d32; }  /* verde */
-    .letters { color: #d35400; } /* naranja */
-    .timeago { color: #9c27b0; font-style: italic; margin-left: 10px; }
-    .label-resultado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 30px;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 30px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 22px;
-      width: 22px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-      box-shadow: 0 2px 3px rgba(0,0,0,0.3);
-    }
-    .toggle-switch input:checked + .toggle-slider {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
-    }
-    .toggle-switch input:checked + .toggle-slider:before {
-      transform: translateX(30px);
-    }
-    .toggle-label {
-      margin-left: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #555;
-      user-select: none;
-    }
-    .toggle-container {
-      display: flex;
-      align-items: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consola SIRCI Operativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .alto-fijo { height: 500px; }
+        textarea { resize: none; }
+        .tabla-ultra-compacta td { padding: 2px 4px !important; line-height: 1.15; vertical-align: top; }
+        @keyframes pulse-red { 0% { background-color: #fee2e2; } 50% { background-color: #f87171; } 100% { background-color: #fee2e2; } }
+        .alerta-critica { animation: pulse-red 2s infinite; color: #7f1d1d !important; }
+    </style>
 </head>
-<body style="font-size: 10px">
-  <nav class="nav nav-tabs mb-3 bg-light container">
-    <a class="nav-item nav-link" href="./index.html">Tabla</a>
-    <a class="nav-item nav-link" href="./dashboard.html">DashBoard</a>
-    <a class="nav-item nav-link active" href="./extrae-txt.html">extrae-txt</a>
-    <a class="nav-item nav-link" href="./index2.html">Tabla-Filtro</a>
-  </nav>
+<body class="bg-slate-200 p-2 lg:p-4">
+    <div class="max-w-[100%] mx-auto space-y-2">
+       
+        <!-- BARRA DE CONTROL SUPERIOR -->
+        <div class="bg-slate-800 rounded-lg shadow-xl overflow-hidden border-b-4 border-blue-600 text-white">
+            <div class="flex flex-wrap md:flex-nowrap items-stretch">
+               
+                <!-- TÍTULO -->
+                <div class="flex-grow p-3 border-r border-slate-700 min-w-[300px]">
+                    <span class="text-[10px] text-slate-400 uppercase font-black block mb-1">Título del Reporte</span>
+                    <div class="flex items-center gap-2">
+                        <div id="tituloReporte" class="font-bold text-base truncate">Esperando datos...</div>
+                        <button onclick="copiarTextoSimple('tituloReporte')" class="text-[10px] bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded font-bold">COPIAR</button>
+                    </div>
+                </div>
 
-  <h2>Procesar texto</h2>
 
-  <!-- Switch para activar/desactivar colores -->
-  <div class="switch-container">
-    <label>
-      <input type="checkbox" id="colorSwitch" checked>
-      Activar colores
-    </label>
-  </div>
+                <!-- TIEMPO -->
+                <div id="contTiempo" class="w-full md:w-48 p-3 border-r border-slate-700 flex flex-col justify-center text-center bg-slate-900">
+                    <span class="text-[10px] text-slate-400 uppercase font-black block mb-1">Transcurrido</span>
+                    <div id="tiempoTranscurrido" class="font-black text-xl leading-none">--</div>
+                </div>
 
-  <div class="contenedor">
-    <div class="campo">
-      <label for="input">Texto de entrada:</label>
-      <div id="input" class="editor" contenteditable="true"></div>
+
+                <!-- MAPA CON URL SOLICITADA -->
+                <div id="contenedorMapa" class="w-full md:w-64 p-2 flex items-center justify-center bg-slate-700">
+                    <button disabled class="bg-slate-600 text-slate-500 px-4 py-2 rounded text-xs font-bold w-full cursor-not-allowed uppercase">Sin Ubicación</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CUADROS DE TRABAJO -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div class="bg-white rounded shadow-md flex flex-col border-t-4 border-blue-600">
+                <div class="p-2 border-b bg-blue-50 flex justify-between items-center text-[10px] font-bold uppercase text-blue-800">
+                    <span>1. Entrada SIRCI</span>
+                    <button onclick="limpiarTodo()" class="bg-red-600 text-white px-2 py-0.5 rounded">LIMPIAR</button>
+                </div>
+                <div class="p-2"><textarea id="inputReporte" class="w-full alto-fijo p-2 border border-slate-200 rounded font-mono text-[12px] outline-none" placeholder="Pegue aquí..."></textarea></div>
+            </div>
+
+
+            <div class="bg-white rounded shadow-md flex flex-col border-t-4 border-green-600">
+                <div class="p-2 border-b bg-green-50 flex justify-between items-center text-[10px] font-bold uppercase text-green-800">
+                    <span>2. Formato STS</span>
+                    <button onclick="copiarTextoArea('outputSTS')" class="bg-green-600 text-white px-4 py-0.5 rounded">COPIAR</button>
+                </div>
+                <div class="p-2"><textarea id="outputSTS" readonly class="w-full alto-fijo p-2 bg-slate-50 border border-slate-200 rounded font-mono text-[12px] outline-none"></textarea></div>
+            </div>
+
+
+            <div class="bg-white rounded shadow-md flex flex-col border-t-4 border-purple-600">
+                <div class="p-2 border-b bg-purple-50 text-[10px] font-bold uppercase text-purple-800">3. Variables</div>
+                <div class="overflow-y-auto alto-fijo">
+                    <table class="w-full text-left border-collapse tabla-ultra-compacta">
+                        <thead class="sticky top-0 bg-slate-100 shadow-sm text-[9px] uppercase text-slate-500">
+                            <tr><th class="p-1 border-b">Campo</th><th class="p-1 border-b">Valor</th></tr>
+                        </thead>
+                        <tbody id="tablaCuerpo" class="divide-y divide-slate-100 text-[11px]"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="campo">
-      <label for="output">Resultado:</label>
-      <div id="output" class="resultado"></div>
-      <button class="btn btn-sm btn-primary mt-2" onclick="copiar()">Copiar resultado</button>
-      <!-- Botón Google Maps + tiempo -->
-      <div id="extraInfo" class="d-flex align-items-center mt-2"></div>
-    </div>
-  </div>
 
-  <script>
-    function calcularTiempo(fechaStr, horaStr) {
-      try {
-        const [dia, mes, anio] = fechaStr.split("-");
-        const [hora, minuto] = horaStr.split(":");
-        const fechaEvento = new Date(anio, mes - 1, dia, hora, minuto);
-        const ahora = new Date();
-        const diffMs = ahora - fechaEvento;
-        if (diffMs < 0) return "en el futuro";
+    <script>
+        const input = document.getElementById('inputReporte');
+        const outputSTS = document.getElementById('outputSTS');
+        const tabla = document.getElementById('tablaCuerpo');
+        const tituloReporte = document.getElementById('tituloReporte');
+        const tiempoTranscurrido = document.getElementById('tiempoTranscurrido');
+        const contTiempo = document.getElementById('contTiempo');
 
-        const diffMin = Math.floor(diffMs / 60000);
-        const diffHoras = Math.floor(diffMin / 60);
-        const diffDias = Math.floor(diffHoras / 24);
 
-        if (diffDias > 0) return `${diffDias} día(s) y ${diffHoras % 24} hora(s) atrás`;
-        if (diffHoras > 0) return `${diffHoras} hora(s) y ${diffMin % 60} minuto(s) atrás`;
-        return `${diffMin} minuto(s) atrás`;
-      } catch {
-        return "";
-      }
-    }
+        setInterval(() => { if (input.value) procesar(); }, 1000);
+        input.addEventListener('input', procesar);
 
-    function procesar(texto) {
-      const regex = /([\p{L}\p{M}\s\-]+):\s*([^/]+)(?=\/|$)/gu;
-      const matches = [...texto.matchAll(regex)];
-      const useColors = document.getElementById("colorSwitch").checked;
 
-      // Función para normalizar etiquetas para comparación
-      function normalizarEtiqueta(etq) {
-        return etq.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      }
+        function procesar() {
+            const texto = input.value.trim();
+            if (!texto) { limpiarTodo(); return; }
 
-      // Crear un array de todos los campos extraídos
-      const todosLosCampos = matches.map(m => ({
-        etiqueta: m[1].trim(),
-        value: m[2].trim()
-      }));
 
-      // Secuencia de orden deseada con etiquetas de salida y posibles variaciones de entrada
-      const ordenCampos = [
-        { etiquetaSalida: "Nombre de contacto", keys: ["nombre de contacto", "reporta", "contacto"], valorFijo: "Auxiliar STS" },
-        { etiquetaSalida: "Teléfono de contacto", keys: ["telefono de contacto", "telefono", "tel"], valorFijo: "3242911287" },
-        { etiquetaSalida: "Tabla", keys: ["tabla"] },
-        { etiquetaSalida: "Ruta", keys: ["ruta"] },
-        { etiquetaSalida: "Viaje", keys: ["viaje"] },
-        { etiquetaSalida: "Servicio", keys: ["servicio"], valorFijo: "Zonal" },
-        { etiquetaSalida: "Descripción del reporte", keys: ["descripcion del reporte", "descripcion"] },
-        { etiquetaSalida: "Fecha y hora de novedad", keys: ["fecha y hora de novedad", "fecha", "hora"], esCombinado: true },
-        { etiquetaSalida: "Código operador (si aplica)", keys: ["codigo operador", "operador", "codigo"] },
-        { etiquetaSalida: "La Novedad es intermitente o durante toda la ruta?", keys: ["la novedad es intermitente o durante toda la ruta", "intermitente"], valorFijo: "Es intermitente" },
-        { etiquetaSalida: "Ubicación aproximada de la novedad", keys: ["ubicacion aproximada de la novedad", "ubicacion aproximada", "direccion", "dirección"] }
-      ];
-
-      let direccionValor = null;
-      let fechaValor = null;
-      let horaValor = null;
-
-      // Buscar valores para "Fecha y hora de novedad" combinado
-      let fechaCombinada = null;
-      let horaCombinada = null;
-      todosLosCampos.forEach(c => {
-        const etqNorm = normalizarEtiqueta(c.etiqueta);
-        if (etqNorm.includes("fecha y hora de novedad")) {
-          fechaCombinada = c.value;
-        } else if (etqNorm === "fecha") {
-          fechaValor = c.value;
-        } else if (etqNorm === "hora") {
-          horaValor = c.value;
-        }
-      });
-
-      // Reordenar campos según la secuencia - SIEMPRE mostrar todos
-      const camposOrdenados = [];
-      const camposUsados = new Set();
-      let fechaIdxUsado = -1;
-      let horaIdxUsado = -1;
-
-      // Recorrer la secuencia de orden y buscar campos coincidentes
-      ordenCampos.forEach(item => {
-        let campoEncontrado = null;
-        let indicesEncontrados = [];
-
-        // Si es "Fecha y hora de novedad" combinado, buscar primero el combinado, luego combinar Fecha y Hora
-        if (item.esCombinado) {
-          // Buscar campo combinado completo
-          for (const ordenKey of item.keys) {
-            if (ordenKey.includes("fecha y hora")) {
-              const resultado = todosLosCampos.find((c, idx) => {
-                if (camposUsados.has(idx)) return false;
-                const etqNorm = normalizarEtiqueta(c.etiqueta);
-                return etqNorm.includes("fecha y hora de novedad");
-              });
-              if (resultado) {
-                campoEncontrado = resultado;
-                indicesEncontrados.push(todosLosCampos.indexOf(resultado));
-                break;
-              }
-            }
-          }
-
-          // Si no se encontró combinado, buscar Fecha y Hora por separado
-          if (!campoEncontrado && fechaValor && horaValor) {
-            const fechaIdx = todosLosCampos.findIndex((c, idx) => 
-              !camposUsados.has(idx) && normalizarEtiqueta(c.etiqueta) === "fecha"
-            );
-            const horaIdx = todosLosCampos.findIndex((c, idx) => 
-              !camposUsados.has(idx) && normalizarEtiqueta(c.etiqueta) === "hora"
-            );
-            
-            if (fechaIdx >= 0 && horaIdx >= 0) {
-              campoEncontrado = {
-                etiqueta: item.etiquetaSalida,
-                value: `${fechaValor} ${horaValor}`
-              };
-              indicesEncontrados.push(fechaIdx, horaIdx);
-              fechaIdxUsado = fechaIdx;
-              horaIdxUsado = horaIdx;
-            }
-          }
-        } else {
-          // Buscar campo coincidente normal
-          for (const ordenKey of item.keys) {
-            const resultado = todosLosCampos.find((c, idx) => {
-              // Si es Fecha o Hora y ya se usaron para el campo combinado, ignorarlos
-              if (idx === fechaIdxUsado || idx === horaIdxUsado) return false;
-              if (camposUsados.has(idx)) return false;
-              
-              const etqNorm = normalizarEtiqueta(c.etiqueta);
-              
-              // Mapeos específicos
-              // Si estamos buscando "Operador", solo coincidir con "operador" exacto
-              if (item.etiquetaSalida.includes("operador")) {
-                return etqNorm === "operador" || etqNorm === "codigo operador";
-              }
-              
-              // Si estamos buscando "Dirección" o "Ubicación", usar esos campos específicamente
-              if (item.etiquetaSalida.includes("Ubicación")) {
-                return etqNorm.includes("direccion") || etqNorm.includes("ubicacion");
-              }
-              
-              // Si estamos buscando "Nombre de contacto", buscar "reporta"
-              if (item.etiquetaSalida.includes("Nombre de contacto")) {
-                return etqNorm === "reporta" || etqNorm.includes("nombre de contacto") || etqNorm.includes("contacto");
-              }
-              
-              // Comparación general
-              return etqNorm === ordenKey || etqNorm.includes(ordenKey) || ordenKey.includes(etqNorm);
+            let dOrig = {}; let dMin = {};
+            const novMatch = texto.match(/\*Novedades SIRCI\*\s*([^\/]+)/i);
+            const tipoNov = novMatch ? novMatch[1].trim() : "Novedad";
+           
+            texto.split('/').forEach(p => {
+                if (p.includes(':')) {
+                    let [kRaw, ...vParts] = p.split(':');
+                    const k = kRaw.trim(); const v = vParts.join(':').trim();
+                    dOrig[k] = v;
+                    const kNorm = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    dMin[kNorm] = v;
+                }
             });
 
-            if (resultado) {
-              campoEncontrado = resultado;
-              indicesEncontrados.push(todosLosCampos.indexOf(resultado));
-              break;
+
+            const getVar = (n) => dMin[n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] || '';
+
+
+            const movil = getVar('Movil');
+            const ruta = getVar('Ruta');
+            const dirExtraida = getVar('Direccion');
+           
+            tituloReporte.innerText = `${movil || '---'} - ${tipoNov}`;
+
+
+            let html = "";
+            for (const [k, v] of Object.entries(dOrig)) {
+                html += `<tr><td class="font-bold text-slate-500 bg-slate-50 border-r text-[10px] uppercase">${k}</td><td class="text-slate-800 font-medium">${v}</td></tr>`;
             }
-          }
+            tabla.innerHTML = html;
+
+
+            outputSTS.value = `Detalle del reporte\n\nNombre de contacto: AUXILIAR STS\nTeléfono de contacto: 3242911287\nTabla: ${getVar('Tabla')}\nRuta: ${ruta}\nViaje: ${getVar('Viaje')}\nServicio: ZONAL\nDescripción del reporte: ${tipoNov} \nFecha y hora: ${getVar('Fecha')} ${getVar('Hora')}\nCódigo operador: ${getVar('Operador')}\nUbicación: ${dirExtraida}`;
+
+
+            // URL EXACTA SOLICITADA
+            if (dirExtraida) {
+                const urlMaps = `https://www.google.com/maps/dir/${encodeURIComponent(dirExtraida)} bogota/Greenmovil`;
+                document.getElementById('contenedorMapa').innerHTML = `<a href="${urlMaps}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-black text-xs shadow-lg w-full text-center">ver ubicacion GOOGLE MAPS</a>`;
+            }
+           
+            calcTiempo(getVar('Fecha'), getVar('Hora'));
         }
 
-        // Agregar el campo encontrado, valor fijo, o uno vacío
-        // Si tiene valor fijo, siempre usar ese valor (ignora el input)
-        if (item.valorFijo) {
-          camposOrdenados.push({
-            etiqueta: item.etiquetaSalida,
-            value: item.valorFijo
-          });
-        } else if (campoEncontrado) {
-          camposOrdenados.push({
-            etiqueta: item.etiquetaSalida,
-            value: campoEncontrado.value
-          });
-          
-          indicesEncontrados.forEach(idx => {
-            if (idx >= 0) camposUsados.add(idx);
-          });
 
-          // Mantener compatibilidad con funcionalidad existente
-          const etqNorm = normalizarEtiqueta(campoEncontrado.etiqueta || item.etiquetaSalida);
-          if (etqNorm.includes("direccion") || etqNorm.includes("ubicacion")) {
-            direccionValor = campoEncontrado.value;
-          }
-        } else {
-          // Campo no encontrado, agregarlo vacío
-          camposOrdenados.push({
-            etiqueta: item.etiquetaSalida,
-            value: "",
-            esVacio: true
-          });
-        }
-      });
-
-      // Buscar dirección para Google Maps (puede venir de cualquier campo relacionado)
-      if (!direccionValor) {
-        todosLosCampos.forEach(c => {
-          const etqNorm = normalizarEtiqueta(c.etiqueta);
-          if (etqNorm.includes("direccion") || etqNorm.includes("ubicacion")) {
-            direccionValor = c.value;
-          }
-        });
-      }
-
-      // Extraer descripción del reporte del texto inicial si no viene como campo
-      const descripcionCampo = camposOrdenados.find(c => normalizarEtiqueta(c.etiqueta).includes("descripcion"));
-      if (descripcionCampo) {
-        if (!descripcionCampo.value) {
-          // Buscar texto antes del primer campo con ":"
-          const primerMatch = matches[0];
-          if (primerMatch) {
-            const inicioTexto = texto.substring(0, texto.indexOf(primerMatch[0])).trim();
-            // Limpiar texto inicial: remover **, / al final, y espacios extra
-            descripcionCampo.value = inicioTexto
-              .replace(/\*\*/g, "")           // Remover asteriscos dobles
-              .replace(/\/\s*$/, "")          // Remover "/" al final con espacios
-              .replace(/\s+/g, " ")           // Reemplazar múltiples espacios por uno
-              .trim();
-          }
-        }
-        // Limpiar "Novedades SIRCI" del texto (si existe valor, tanto extraído como del input)
-        if (descripcionCampo.value) {
-          descripcionCampo.value = descripcionCampo.value
-            .replace(/Novedades SIRCI/gi, "")  // Remover "Novedades SIRCI" (case insensitive)
-            .replace(/\s+/g, " ")              // Reemplazar múltiples espacios por uno
-            .trim();
-        }
-      }
-
-      // Generar HTML de salida
-      const resultadoColores = camposOrdenados.map(campo => {
-        // Si es el título, mostrarlo sin valor
-        if (campo.esTitulo) {
-          return "<strong>Detalle del reporte</strong>";
+        function calcTiempo(f, h) {
+            if (!f || !h) return;
+            const [d, m, a] = f.split('-').map(Number);
+            const [hh, mm] = h.split(':').map(Number);
+            const diff = Math.floor((new Date() - new Date(a, m - 1, d, hh, mm)) / 60000);
+            tiempoTranscurrido.innerText = diff < 60 ? `${diff} MIN` : `${Math.floor(diff/60)}H ${diff%60}M`;
+            if (diff >= 20) contTiempo.classList.add('alerta-critica');
+            else contTiempo.classList.remove('alerta-critica');
         }
 
-        const etiqueta = campo.etiqueta;
-        const value = campo.value || "";
-        const label = useColors
-          ? `<span class="label">${etiqueta}:</span>`
-          : `${etiqueta}:`;
 
-        if (useColors) {
-          if (value && /^[0-9]+$/.test(value)) {
-            return `${label} <span class="number">${value}</span>`;
-          } else if (value && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/.test(value)) {
-            return `${label} <span class="letters">${value}</span>`;
-          } else {
-            return `${label} ${value}`;
-          }
-        } else {
-          return `${label} ${value}`;
+        function copiarTextoSimple(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
         }
-      }).join("<br>");
 
-      document.getElementById("output").innerHTML = resultadoColores;
 
-      // Mostrar botón de Google Maps y tiempo juntos
-      const extraDiv = document.getElementById("extraInfo");
-      extraDiv.innerHTML = "";
-      if (direccionValor) {
-        const direccionEncoded = encodeURIComponent(direccionValor);
-        const mapsBtn = `<a href="https://www.google.com/maps/dir/${direccionEncoded} bogota/Greenmovil" target="_blank" class="btn btn-sm btn-success">Ver en Google Maps</a>`;
-        let tiempoTxt = "";
-        if (fechaValor && horaValor) {
-          tiempoTxt = `<span class="timeago">${calcularTiempo(fechaValor, horaValor)}</span>`;
+        function copiarTextoArea(id) {
+            const area = document.getElementById(id);
+            area.select();
+            document.execCommand('copy');
         }
-        extraDiv.innerHTML = mapsBtn + tiempoTxt;
-      }
-    }
 
-    document.getElementById("input").addEventListener("input", (event) => {
-      const texto = event.target.innerText;
-      if (texto.length > 0) {
-        procesar(texto);
-      } else {
-        document.getElementById("output").innerHTML = "";
-        document.getElementById("extraInfo").innerHTML = "";
-      }
-    });
 
-    document.getElementById("colorSwitch").addEventListener("change", () => {
-      const texto = document.getElementById("input").innerText;
-      if (texto.length > 0) {
-        procesar(texto);
-      }
-    });
-
-    function copiar() {
-      const outputDiv = document.getElementById("output");
-      const range = document.createRange();
-      range.selectNodeContents(outputDiv);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      document.execCommand("copy");
-      //alert("Resultado copiado con formato y saltos de línea.");
-    }
-  </script></body>
+        function limpiarTodo() {
+            input.value = ""; outputSTS.value = ""; tabla.innerHTML = "";
+            tituloReporte.innerText = "Esperando datos..."; tiempoTranscurrido.innerText = "--";
+            contTiempo.classList.remove('alerta-critica');
+            document.getElementById('contenedorMapa').innerHTML = `<button disabled class="bg-slate-600 text-slate-500 px-4 py-2 rounded text-xs font-bold w-full cursor-not-allowed uppercase">Sin Ubicación</button>`;
+        }
+    </script>
+</body>
 </html>
+
+
+
