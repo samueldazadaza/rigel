@@ -71,7 +71,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         
         let progreso = (vX * lineX + vY * lineY) / magCuadrada;
 
-        if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
+        if (progreso < -0.15 || progreso > 1.15) return "Fuera";
 
         progreso = Math.max(0, Math.min(1, progreso));
         
