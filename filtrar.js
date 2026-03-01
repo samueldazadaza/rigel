@@ -14,7 +14,7 @@ async function funcionObtenerDatosRigel() {
   try {
     const response = await fetch(urlrigel);
     const datos = await response.json();
-    datosrigelglobal.push(...datos.data);
+    datosrigelglobal.push(...datos.periodic_20);
     console.log("✅ Datos de Rigel guardados en datosrigelglobal");
   } catch (error) {
     console.error("❌ Error al obtener datos de Rigel:", error);
