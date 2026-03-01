@@ -16,8 +16,8 @@ const configCanopis = {
     "C_Ori": { p1: { lat: 4.700384, lon: -74.163653 }, pn: { lat: 4.701113, lon: -74.162872 }, min: 1, max: 35, label: "C" },
     "C_Occ": { p1: { lat: 4.700426, lon: -74.163848 }, pn: { lat: 4.701217, lon: -74.163023 }, min: 72, max: 36, label: "C" },
     // Canopi D, E
-    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.701359, lon: -74.163202 }, min: 1, max: 45, label: "D" },
-    "E": { p1: { lat: 4.700549, lon: -74.164279 }, pn: { lat: 4.701457, lon: -74.163335 }, min: 1, max: 45, label: "E" },
+    "D": { p1: { lat: 4.700418, lon: -74.164111 }, pn: { lat: 4.701291, lon: -74.163262 }, min: 1, max: 45, label: "D" },
+    "E": { p1: { lat: 4.700598, lon: -74.164298 }, pn: { lat: 4.701413, lon: -74.163375 }, min: 1, max: 45, label: "E" },
     // Canopi F
     "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 50, label: "F" },
     "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 51, label: "F" },
