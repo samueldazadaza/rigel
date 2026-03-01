@@ -169,5 +169,5 @@ function filtrarPorSistema() {
     });
 }
 
-async function ejecutarProcesoCompleto() {
+async function ejecutarProcesoCompleto()
   
