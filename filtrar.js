@@ -2,18 +2,27 @@
 const urlrigel = 'https://api-rigel2.vercel.app/';
 const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 
-// Punto de referencia central para distancias generales
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
 
-// COORDENADAS ACTUALIZADAS (P1: Inicio / PN: Fin)
+// COORDENADAS ACTUALIZADAS CON ORIENTE / OCCIDENTE
 const configCanopis = {
-    "A": { p1: { lat: 4.700282, lon: -74.162953 }, pn: { lat: 4.700835, lon: -74.162376 }, max: 24 },
-    "B": { p1: { lat: 4.700309, lon: -74.163350 }, pn: { lat: 4.701009, lon: -74.162623 }, max: 30 },
-    "C": { p1: { lat: 4.700365, lon: -74.163784 }, pn: { lat: 4.701196, lon: -74.162912 }, max: 35 },
-    "D": { p1: { lat: 4.700450, lon: -74.164211 }, pn: { lat: 4.701415, lon: -74.163283 }, max: 40 },
-    "E": { p1: { lat: 4.700423, lon: -74.164523 }, pn: { lat: 4.701506, lon: -74.163438 }, max: 45 }, // Estimado intermedio D-F
-    "F": { p1: { lat: 4.700397, lon: -74.164836 }, pn: { lat: 4.701597, lon: -74.163594 }, max: 50 },
-    "G": { p1: { lat: 4.700386, lon: -74.165281 }, pn: { lat: 4.701848, lon: -74.163706 }, max: 63 }
+    // Canopi A
+    "A_Ori": { p1: { lat: 4.700375, lon: -74.162764 }, pn: { lat: 4.700792, lon: -74.162336 }, min: 1, max: 24, label: "A" },
+    "A_Occ": { p1: { lat: 4.700336, lon: -74.163010 }, pn: { lat: 4.700871, lon: -74.162448 }, min: 48, max: 25, label: "A" },
+    // Canopi B
+    "B_Ori": { p1: { lat: 4.700329, lon: -74.163228 }, pn: { lat: 4.700889, lon: -74.162664 }, min: 1, max: 30, label: "B" },
+    "B_Occ": { p1: { lat: 4.700375, lon: -74.163375 }, pn: { lat: 4.701038, lon: -74.162702 }, min: 62, max: 31, label: "B" },
+    // Canopi C
+    "C_Ori": { p1: { lat: 4.700384, lon: -74.163653 }, pn: { lat: 4.701113, lon: -74.162872 }, min: 1, max: 35, label: "C" },
+    "C_Occ": { p1: { lat: 4.700426, lon: -74.163848 }, pn: { lat: 4.701217, lon: -74.163023 }, min: 72, max: 36, label: "C" },
+    // Canopi D, E
+    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.701359, lon: -74.163202 }, min: 1, max: 40, label: "D" },
+    "E": { p1: { lat: 4.700549, lon: -74.164279 }, pn: { lat: 4.701457, lon: -74.163335 }, min: 1, max: 40, label: "E" },
+    // Canopi F
+    "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 50, label: "F" },
+    "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 51, label: "F" },
+    // Canopi G
+    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
 };
 
 let datosrigelglobal = [];
@@ -36,26 +45,24 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function obtenerNomenclaturaCanopi(latV, lonV) {
     if (!latV || !lonV) return "-";
     try {
-        let mejorCanopi = "A";
+        let mejorClave = "A_Ori";
         let minDistanceDegrees = Infinity;
 
-        // 1. Encontrar el Canopi más cercano lateralmente
+        // 1. Encontrar la línea (sub-canopi) más cercana
         for (const [id, data] of Object.entries(configCanopis)) {
             const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / 
                          Math.sqrt(Math.pow(data.pn.lon - data.p1.lon, 2) + Math.pow(data.pn.lat - data.p1.lat, 2));
             
             if (dist < minDistanceDegrees) {
                 minDistanceDegrees = dist;
-                mejorCanopi = id;
+                mejorClave = id;
             }
         }
 
-        // --- GEOFENCE: Si está a más de ~70 metros del canopi más cercano ---
-        if (minDistanceDegrees > 0.00065) {
-            return "EN RUTA";
-        }
+        // --- GEOFENCE ---
+        if (minDistanceDegrees > 0.00045) return "EN RUTA";
 
-        const c = configCanopis[mejorCanopi];
+        const c = configCanopis[mejorClave];
         const vX = lonV - c.p1.lon;
         const vY = latV - c.p1.lat;
         const lineX = c.pn.lon - c.p1.lon;
@@ -64,30 +71,27 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         
         let progreso = (vX * lineX + vY * lineY) / magCuadrada;
 
-        // Si se sale mucho de los extremos (Norte o Sur)
-        if (progreso < -0.15 || progreso > 1.15) {
-            return "EN RUTA";
-        }
+        if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
 
         progreso = Math.max(0, Math.min(1, progreso));
-        const numero = Math.round(progreso * (c.max - 1)) + 1;
         
-        return `${mejorCanopi}${numero}`;
+        // Interpolación entre el número inicial (min) y final (max) de esa línea
+        const numero = Math.round(c.min + (progreso * (c.max - c.min)));
+        
+        return `${c.label}${numero}`;
     } catch (e) {
         return "Error GPS";
     }
 }
 
-// --- CAPTURA DE DATOS ---
+// --- CAPTURA DE DATOS API ---
 
 async function funcionObtenerDatosRigel() {
     try {
         const response = await fetch(urlrigel);
         const datos = await response.json();
         datosrigelglobal = datos.data || [];
-    } catch (error) {
-        console.error("Error Rigel:", error);
-    }
+    } catch (error) { console.error("Error Rigel:", error); }
 }
 
 async function funcionObtenerDatosP60() {
@@ -95,9 +99,7 @@ async function funcionObtenerDatosP60() {
         const response = await fetch(urlp60);
         const datosp60 = await response.json();
         datosp60global = datosp60.periodic_20 || [];
-    } catch (error) {
-        console.error("Error P60:", error);
-    }
+    } catch (error) { console.error("Error P60:", error); }
 }
 
 function enriquecerDatos() {
@@ -106,7 +108,6 @@ function enriquecerDatos() {
             const idVehiculoFormateado = vehiculo.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
             return idVehiculoFormateado === incidente.vehicle_code;
         });
-
         return {
             ...incidente,
             ...(datoP60 && {
@@ -129,9 +130,8 @@ function mostrarDatosEnriquecidos(datos) {
         const lng = parseFloat(item.localizacionVehiculo?.longitud);
 
         const posicionPatio = (lat && lng) ? obtenerNomenclaturaCanopi(lat, lng) : '-';
-        const esRuta = posicionPatio === "EN RUTA";
+        const colorEstado = posicionPatio === "EN RUTA" ? "#27ae60" : "#d35400";
         
-        const colorEstado = esRuta ? "#27ae60" : "#d35400";
         const distVal = (lat && lng) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lng).toFixed(2) : '-';
         const tiempo = distVal !== '-' ? (distVal * 4).toFixed(0) : '-';
         const mapsUrl = (lat && lng) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
@@ -167,7 +167,6 @@ function filtrarPorSistema() {
     if (!input) return;
     const filtro = input.value.toLowerCase();
     const filas = document.querySelectorAll('#tablaEnriquecida tr');
-
     filas.forEach(fila => {
         const sistema = fila.cells[1]?.textContent.toLowerCase();
         fila.style.display = sistema.includes(filtro) ? '' : 'none';
@@ -180,10 +179,7 @@ async function ejecutarProcesoCompleto() {
         await funcionObtenerDatosP60();
         enriquecerDatos();
         mostrarDatosEnriquecidos(jsonEnriquecidoGlobal);
-    } catch (err) {
-        console.error("Fallo en ejecución:", err);
-    }
+    } catch (err) { console.error("Error crítico:", err); }
 }
 
 ejecutarProcesoCompleto();
-    
