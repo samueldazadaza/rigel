@@ -50,7 +50,7 @@ function enriquecerDatos() {
         idRuta: datoP60.idRuta,
         idVehiculo: datoP60.idVehiculo,
         kilometrosOdometro: datoP60.kilometrosOdometro,
-        localizacionVehiculo: datoP60.localizacionVehiculo
+        localizacionVehiculo: datoP60.localizacionVehiculo[0]
       })
     };
   });
