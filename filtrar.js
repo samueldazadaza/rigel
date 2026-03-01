@@ -60,7 +60,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         }
 
         // --- GEOFENCE ---
-        if (minDistanceDegrees > 0.00045) return "EN RUTA";
+        if (minDistanceDegrees > 0.00045) return "Ruta";
 
         const c = configCanopis[mejorClave];
         const vX = lonV - c.p1.lon;
@@ -71,7 +71,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         
         let progreso = (vX * lineX + vY * lineY) / magCuadrada;
 
-        if (progreso < -0.15 || progreso > 1.15) return "Fuera";
+        if (progreso < -0.15 || progreso > 1.15) return "Ruta";
 
         progreso = Math.max(0, Math.min(1, progreso));
         
