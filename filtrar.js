@@ -2,18 +2,18 @@
 const urlrigel = 'https://api-rigel2.vercel.app/';
 const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 
-// Punto central de Green Móvil para cálculos de distancia general
+// Punto de referencia central para distancias generales
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
 
-// Coordenadas exactas de los extremos de cada Canopi (Sur -> Norte)
+// COORDENADAS ACTUALIZADAS (P1: Inicio / PN: Fin)
 const configCanopis = {
-    "A": { p1: { lat: 4.700215, lon: -74.163020 }, pn: { lat: 4.700889, lon: -74.162352 }, max: 24 },
-    "B": { p1: { lat: 4.700210, lon: -74.163463 }, pn: { lat: 4.701050, lon: -74.162586 }, max: 30 },
-    "C": { p1: { lat: 4.700270, lon: -74.163876 }, pn: { lat: 4.701267, lon: -74.162879 }, max: 35 },
-    "D": { p1: { lat: 4.700257, lon: -74.164429 }, pn: { lat: 4.701492, lon: -74.163203 }, max: 40 },
-    "E": { p1: { lat: 4.700297, lon: -74.164665 }, pn: { lat: 4.701587, lon: -74.163360 }, max: 45 },
-    "F": { p1: { lat: 4.700338, lon: -74.164902 }, pn: { lat: 4.701683, lon: -74.163518 }, max: 50 },
-    "G": { p1: { lat: 4.700384, lon: -74.165323 }, pn: { lat: 4.701882, lon: -74.163706 }, max: 63 }
+    "A": { p1: { lat: 4.700282, lon: -74.162953 }, pn: { lat: 4.700835, lon: -74.162376 }, max: 24 },
+    "B": { p1: { lat: 4.700309, lon: -74.163350 }, pn: { lat: 4.701009, lon: -74.162623 }, max: 30 },
+    "C": { p1: { lat: 4.700365, lon: -74.163784 }, pn: { lat: 4.701196, lon: -74.162912 }, max: 35 },
+    "D": { p1: { lat: 4.700450, lon: -74.164211 }, pn: { lat: 4.701415, lon: -74.163283 }, max: 40 },
+    "E": { p1: { lat: 4.700423, lon: -74.164523 }, pn: { lat: 4.701506, lon: -74.163438 }, max: 45 }, // Estimado intermedio D-F
+    "F": { p1: { lat: 4.700397, lon: -74.164836 }, pn: { lat: 4.701597, lon: -74.163594 }, max: 50 },
+    "G": { p1: { lat: 4.700386, lon: -74.165281 }, pn: { lat: 4.701848, lon: -74.163706 }, max: 63 }
 };
 
 let datosrigelglobal = [];
@@ -22,7 +22,6 @@ let jsonEnriquecidoGlobal = [];
 
 // --- FUNCIONES GEOGRÁFICAS ---
 
-// Calcula distancia física en Km
 function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -34,14 +33,13 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-// Lógica de detección de Patio vs Ruta
 function obtenerNomenclaturaCanopi(latV, lonV) {
     if (!latV || !lonV) return "-";
     try {
         let mejorCanopi = "A";
         let minDistanceDegrees = Infinity;
 
-        // 1. Buscamos el canopi más cercano lateralmente
+        // 1. Encontrar el Canopi más cercano lateralmente
         for (const [id, data] of Object.entries(configCanopis)) {
             const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / 
                          Math.sqrt(Math.pow(data.pn.lon - data.p1.lon, 2) + Math.pow(data.pn.lat - data.p1.lat, 2));
@@ -52,9 +50,8 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
             }
         }
 
-        // --- VALIDACIÓN DE UMBRAL (GEOFENCE) ---
-        // Si el vehículo está a más de ~80 metros del canopi más cercano, está "EN RUTA"
-        if (minDistanceDegrees > 0.0008) {
+        // --- GEOFENCE: Si está a más de ~70 metros del canopi más cercano ---
+        if (minDistanceDegrees > 0.00065) {
             return "EN RUTA";
         }
 
@@ -65,15 +62,13 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         const lineY = c.pn.lat - c.p1.lat;
         const magCuadrada = lineX * lineX + lineY * lineY;
         
-        // Proyección escalar para saber qué tan "adelante" en el canopi está
         let progreso = (vX * lineX + vY * lineY) / magCuadrada;
 
-        // Si el progreso se sale mucho de los límites (Sur/Norte), está en ruta
+        // Si se sale mucho de los extremos (Norte o Sur)
         if (progreso < -0.15 || progreso > 1.15) {
             return "EN RUTA";
         }
 
-        // Ajustamos progreso al rango 0-1 y calculamos el número de posición
         progreso = Math.max(0, Math.min(1, progreso));
         const numero = Math.round(progreso * (c.max - 1)) + 1;
         
@@ -83,14 +78,13 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     }
 }
 
-// --- CAPTURA DE DATOS API ---
+// --- CAPTURA DE DATOS ---
 
 async function funcionObtenerDatosRigel() {
     try {
         const response = await fetch(urlrigel);
         const datos = await response.json();
         datosrigelglobal = datos.data || [];
-        console.log("Rigel OK");
     } catch (error) {
         console.error("Error Rigel:", error);
     }
@@ -101,7 +95,6 @@ async function funcionObtenerDatosP60() {
         const response = await fetch(urlp60);
         const datosp60 = await response.json();
         datosp60global = datosp60.periodic_20 || [];
-        console.log("P60 OK");
     } catch (error) {
         console.error("Error P60:", error);
     }
@@ -125,7 +118,7 @@ function enriquecerDatos() {
     });
 }
 
-// --- RENDERIZADO EN PANTALLA ---
+// --- RENDERIZADO ---
 
 function mostrarDatosEnriquecidos(datos) {
     const contenedor = document.getElementById("tablaEnriquecida");
@@ -135,13 +128,10 @@ function mostrarDatosEnriquecidos(datos) {
         const lat = parseFloat(item.localizacionVehiculo?.latitud);
         const lng = parseFloat(item.localizacionVehiculo?.longitud);
 
-        // Determinamos posición o estado "En Ruta"
         const posicionPatio = (lat && lng) ? obtenerNomenclaturaCanopi(lat, lng) : '-';
+        const esRuta = posicionPatio === "EN RUTA";
         
-        // Color dinámico: Naranja para patio, Verde para ruta
-        const colorEstado = posicionPatio === "EN RUTA" ? "#27ae60" : "#d35400";
-        const pesoFuente = posicionPatio === "EN RUTA" ? "normal" : "bold";
-
+        const colorEstado = esRuta ? "#27ae60" : "#d35400";
         const distVal = (lat && lng) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lng).toFixed(2) : '-';
         const tiempo = distVal !== '-' ? (distVal * 4).toFixed(0) : '-';
         const mapsUrl = (lat && lng) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
@@ -156,8 +146,8 @@ function mostrarDatosEnriquecidos(datos) {
                 <td>${item.days_off ?? '-'}</td>
                 <td>${item.current_status || '-'}</td>
                 <td>${item.idRuta || '-'}</td>
-                <td style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px;">
-                    <b style="color: ${colorEstado}; font-weight: ${pesoFuente};">${posicionPatio}</b> 
+                <td style="font-family: sans-serif; font-size: 13px;">
+                    <b style="color: ${colorEstado};">${posicionPatio}</b> 
                     <span style="color: #7f8c8d; margin-left: 5px;">| ${distVal}km (${tiempo}min)</span>
                     <a href="${mapsUrl}" target="_blank" style="text-decoration:none; margin-left: 5px;">📍</a>
                 </td>
@@ -170,7 +160,7 @@ function mostrarDatosEnriquecidos(datos) {
     if (loader) loader.style.display = "none";
 }
 
-// --- CONTROLADORES Y FILTROS ---
+// --- FILTROS Y EJECUCIÓN ---
 
 function filtrarPorSistema() {
     const input = document.getElementById('filtroSistema');
@@ -191,10 +181,9 @@ async function ejecutarProcesoCompleto() {
         enriquecerDatos();
         mostrarDatosEnriquecidos(jsonEnriquecidoGlobal);
     } catch (err) {
-        console.error("Fallo crítico en el proceso:", err);
+        console.error("Fallo en ejecución:", err);
     }
 }
 
-// Iniciar proceso
 ejecutarProcesoCompleto();
-                                                 
+    
