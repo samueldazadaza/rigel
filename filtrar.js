@@ -1,8 +1,9 @@
-// --- CONFIGURACIÓN Y CONSTANTES (Se mantienen iguales) ---
+// --- CONFIGURACIÓN Y CONSTANTES ---
 const urlrigel = 'https://api-rigel2.vercel.app/';
 const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
 
+// Configuración de Canopis (GPS)
 const configCanopis = {
     "A_Ori": { p1: { lat: 4.700375, lon: -74.162764 }, pn: { lat: 4.700792, lon: -74.162336 }, min: 1, max: 24, label: "A" },
     "A_Occ": { p1: { lat: 4.700336, lon: -74.163010 }, pn: { lat: 4.700871, lon: -74.162448 }, min: 48, max: 25, label: "A" },
@@ -18,125 +19,101 @@ const configCanopis = {
 };
 
 let datosp60global = [];
-let jsonEnriquecidoGlobal = [];
 
-// --- FUNCIONES GEOGRÁFICAS (Se mantienen iguales) ---
+// --- FUNCIONES GEOGRÁFICAS ---
 function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
 function obtenerNomenclaturaCanopi(latV, lonV) {
     if (!latV || !lonV) return "-";
-    try {
-        let mejorClave = "A_Ori";
-        let minDistanceDegrees = Infinity;
-        for (const [id, data] of Object.entries(configCanopis)) {
-            const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / Math.sqrt(Math.pow(data.pn.lon - data.p1.lon, 2) + Math.pow(data.pn.lat - data.p1.lat, 2));
-            if (dist < minDistanceDegrees) { minDistanceDegrees = dist; mejorClave = id; }
-        }
-        if (minDistanceDegrees > 0.00045) return "EN RUTA";
-        const c = configCanopis[mejorClave];
-        const vX = lonV - c.p1.lon; const vY = latV - c.p1.lat;
-        const lineX = c.pn.lon - c.p1.lon; const lineY = c.pn.lat - c.p1.lat;
-        let progreso = (vX * lineX + vY * lineY) / (lineX * lineX + lineY * lineY);
-        if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
-        progreso = Math.max(0, Math.min(1, progreso));
-        return `${c.label}${Math.round(c.min + (progreso * (c.max - c.min)))}`;
-    } catch (e) { return "Err"; }
+    let mejorClave = "A_Ori", minDistanceDegrees = Infinity;
+    for (const [id, data] of Object.entries(configCanopis)) {
+        const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / 
+                     Math.sqrt((data.pn.lon - data.p1.lon)**2 + (data.pn.lat - data.p1.lat)**2);
+        if (dist < minDistanceDegrees) { minDistanceDegrees = dist; mejorClave = id; }
+    }
+    if (minDistanceDegrees > 0.00045) return "EN RUTA";
+    const c = configCanopis[mejorClave];
+    let progreso = ((lonV - c.p1.lon) * (c.pn.lon - c.p1.lon) + (latV - c.p1.lat) * (c.pn.lat - c.p1.lat)) / 
+                   ((c.pn.lon - c.p1.lon)**2 + (c.pn.lat - c.p1.lat)**2);
+    if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
+    return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- LOGICA DEL TEXTAREA ---
+// --- LÓGICA DE BÚSQUEDA EN TEXTAREA (TABLA NUEVA) ---
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
-    if (!textarea || !resultadoDiv) return;
+    if (!textarea.value.trim()) { resultadoDiv.innerHTML = "Esperando datos..."; return; }
 
-    const lineas = textarea.value.split(/\n/);
-    let htmlResultados = "<strong>Resultados:</strong><ul style='list-style:none; padding:0; margin-top:10px;'>";
+    let tabla = `<table class="table table-sm table-bordered bg-white" style="font-size:11px">
+        <thead class="table-secondary">
+            <tr><th>ID Bus</th><th>Ubicación</th><th>Ruta</th><th>Distancia</th><th>Tiempo</th><th>Mapa</th></tr>
+        </thead><tbody>`;
 
-    lineas.forEach(linea => {
+    textarea.value.split(/\n/).forEach(linea => {
         const cod = linea.trim();
         if (!cod) return;
-        const idBusqueda = cod.replace(/-/g, "");
-        const v = datosp60global.find(item => item.idVehiculo === idBusqueda);
-
+        const v = datosp60global.find(item => item.idVehiculo === cod.replace(/-/g, ""));
         if (v && v.localizacionVehiculo[0]) {
-            const ubic = obtenerNomenclaturaCanopi(parseFloat(v.localizacionVehiculo[0].latitud), parseFloat(v.localizacionVehiculo[0].longitud));
-            const col = ubic === "EN RUTA" ? "#27ae60" : "#d35400";
-            htmlResultados += `<li>📍 ${cod}: <b style="color:${col}">${ubic}</b></li>`;
+            const lat = parseFloat(v.localizacionVehiculo[0].latitud);
+            const lon = parseFloat(v.localizacionVehiculo[0].longitud);
+            const ubic = obtenerNomenclaturaCanopi(lat, lon);
+            const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
+            tabla += `<tr>
+                <td><b>${cod}</b></td>
+                <td style="color:${ubic === "EN RUTA" ? "green" : "orange"}"><b>${ubic}</b></td>
+                <td>${v.idRuta || '-'}</td>
+                <td>${dist} km</td>
+                <td>${(dist * 4).toFixed(0)} min</td>
+                <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
+            </tr>`;
         } else {
-            htmlResultados += `<li>❌ ${cod}: <span style="color:gray">No hallado</span></li>`;
+            tabla += `<tr><td>${cod}</td><td colspan="5" class="text-muted">No hallado</td></tr>`;
         }
     });
-    resultadoDiv.innerHTML = htmlResultados + "</ul>";
+    resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
-// --- CARGA DE DATOS ---
-async function ejecutarProcesoCompleto() {
+// --- PROCESO PRINCIPAL ---
+async function ejecutar() {
     try {
-        const [resRigel, resP60] = await Promise.all([ fetch(urlrigel), fetch(urlp60) ]);
-        const [dataRigel, dataP60] = await Promise.all([ resRigel.json(), resP60.json() ]);
-        
-        datosrigelglobal = dataRigel.data || [];
-        datosp60global = dataP60.periodic_20 || [];
+        const [resR, resP] = await Promise.all([fetch(urlrigel), fetch(urlp60)]);
+        const dataR = await resR.json();
+        datosp60global = (await resP.json()).periodic_20 || [];
 
-        jsonEnriquecidoGlobal = datosrigelglobal.map(inc => {
-            const p60 = datosp60global.find(v => v.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === inc.vehicle_code);
-            return { ...inc, ...(p60 && { idRuta: p60.idRuta, localizacionVehiculo: p60.localizacionVehiculo[0] }) };
+        // Renderizar tabla principal
+        document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
+            const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
+            const lat = parseFloat(v?.localizacionVehiculo[0]?.latitud);
+            const lon = parseFloat(v?.localizacionVehiculo[0]?.longitud);
+            const ubic = (lat && lon) ? obtenerNomenclaturaCanopi(lat, lon) : '-';
+            return `<tr>
+                <td>${i+1}</td><td>${item.system_name}</td><td>${item.vehicle_code}</td><td>${item.issue_description}</td>
+                <td>${item.date_created}</td><td>${item.days_off}</td><td>${item.current_status}</td><td>${v?.idRuta || '-'}</td>
+                <td><b>${ubic}</b> <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
+            </tr>`;
+        }).join('');
+
+        // --- ACTIVACIÓN DEL BOTÓN "B" Y TEXTAREA ---
+        document.getElementById("loader").style.display = "none";
+        const btnB = document.getElementById("checkActivar");
+        const contenedor = document.getElementById("contenedor-entrada");
+        
+        btnB.disabled = false; // Habilita el check
+        btnB.addEventListener("change", () => {
+            contenedor.style.display = btnB.checked ? "block" : "none";
         });
 
-        mostrarDatosEnriquecidos(jsonEnriquecidoGlobal);
-    } catch (err) { console.error("Error:", err); }
+        document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
+
+    } catch (e) { console.error(e); }
 }
 
-function mostrarDatosEnriquecidos(datos) {
-    const tabla = document.getElementById("tablaEnriquecida");
-    if (!tabla) return;
-
-    tabla.innerHTML = datos.map((item, index) => {
-        const lat = parseFloat(item.localizacionVehiculo?.latitud);
-        const lon = parseFloat(item.localizacionVehiculo?.longitud);
-        const ubic = (lat && lon) ? obtenerNomenclaturaCanopi(lat, lon) : '-';
-        const dist = (lat && lon) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2) : '-';
-        
-        return `<tr>
-            <td>${index + 1}</td>
-            <td>${item.system_name || '-'}</td>
-            <td>${item.vehicle_code || '-'}</td>
-            <td>${item.issue_description || '-'}</td>
-            <td>${item.date_created || '-'}</td>
-            <td>${item.days_off ?? '-'}</td>
-            <td>${item.current_status || '-'}</td>
-            <td>${item.idRuta || '-'}</td>
-            <td style="font-size: 13px;">
-                <b style="color:${ubic === "EN RUTA" ? "#27ae60" : "#d35400"}">${ubic}</b> 
-                | ${dist}km <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>
-            </td>
-        </tr>`;
-    }).join('');
-
-    // 1. Quitar loader
-    document.getElementById("loader").style.display = "none";
-
-    // 2. Habilitar el Check de activación
-    const checkActivar = document.getElementById("checkActivarBuscador");
-    const contenedorBuscador = document.getElementById("contenedor-entrada");
-    
-    if (checkActivar) {
-        checkActivar.disabled = false; // Ya no está gris
-        checkActivar.addEventListener("change", function() {
-            // Mostrar u ocultar según el check
-            contenedorBuscador.style.display = this.checked ? "block" : "none";
-        });
-    }
-
-    // 3. Activar escucha del textarea
-    const txt = document.getElementById("campo-texto");
-    if (txt) txt.addEventListener("input", procesarTextoPegado);
-}
-
-ejecutarProcesoCompleto();
+ejecutar();
+                                               
