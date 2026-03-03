@@ -3,7 +3,6 @@ const urlrigel = 'https://api-rigel2.vercel.app/';
 const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
 
-// Configuración de Canopis (GPS)
 const configCanopis = {
     "A_Ori": { p1: { lat: 4.700375, lon: -74.162764 }, pn: { lat: 4.700792, lon: -74.162336 }, min: 1, max: 24, label: "A" },
     "A_Occ": { p1: { lat: 4.700336, lon: -74.163010 }, pn: { lat: 4.700871, lon: -74.162448 }, min: 48, max: 25, label: "A" },
@@ -25,7 +24,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2) * Math.sin(dLng/2);
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
@@ -34,18 +33,18 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     let mejorClave = "A_Ori", minDistanceDegrees = Infinity;
     for (const [id, data] of Object.entries(configCanopis)) {
         const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / 
-                     Math.sqrt((data.pn.lon - data.p1.lon)**2 + (data.pn.lat - data.p1.lat)**2);
+                     Math.sqrt(Math.pow(data.pn.lon - data.p1.lon, 2) + Math.pow(data.pn.lat - data.p1.lat, 2));
         if (dist < minDistanceDegrees) { minDistanceDegrees = dist; mejorClave = id; }
     }
     if (minDistanceDegrees > 0.00045) return "EN RUTA";
     const c = configCanopis[mejorClave];
     let progreso = ((lonV - c.p1.lon) * (c.pn.lon - c.p1.lon) + (latV - c.p1.lat) * (c.pn.lat - c.p1.lat)) / 
-                   ((c.pn.lon - c.p1.lon)**2 + (c.pn.lat - c.p1.lat)**2);
+                   (Math.pow(c.pn.lon - c.p1.lon, 2) + Math.pow(c.pn.lat - c.p1.lat, 2));
     if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- LÓGICA DE BÚSQUEDA EN TEXTAREA (TABLA NUEVA) ---
+// --- LÓGICA DE BÚSQUEDA EN TEXTAREA ---
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
@@ -53,7 +52,7 @@ function procesarTextoPegado() {
 
     let tabla = `<table class="table table-sm table-bordered bg-white" style="font-size:11px">
         <thead class="table-secondary">
-            <tr><th>ID Bus</th><th>Ubicación</th><th>Ruta</th><th>Distancia</th><th>Tiempo</th><th>Mapa</th></tr>
+            <tr><th>ID Bus</th><th>Ubicación</th><th>Ruta</th><th>Km</th><th>Min</th><th>Mapa</th></tr>
         </thead><tbody>`;
 
     textarea.value.split(/\n/).forEach(linea => {
@@ -65,16 +64,18 @@ function procesarTextoPegado() {
             const lon = parseFloat(v.localizacionVehiculo[0].longitud);
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
             const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
+            const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+            
             tabla += `<tr>
                 <td><b>${cod}</b></td>
-                <td style="color:${ubic === "EN RUTA" ? "green" : "orange"}"><b>${ubic}</b></td>
+                <td style="color:${colorUbic}"><b>${ubic}</b></td>
                 <td>${v.idRuta || '-'}</td>
                 <td>${dist} km</td>
                 <td>${(dist * 4).toFixed(0)} min</td>
                 <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         } else {
-            tabla += `<tr><td>${cod}</td><td colspan="5" class="text-muted">No hallado</td></tr>`;
+            tabla += `<tr><td>${cod}</td><td colspan="5" class="text-muted text-center">Sin reporte GPS</td></tr>`;
         }
     });
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
@@ -85,35 +86,53 @@ async function ejecutar() {
     try {
         const [resR, resP] = await Promise.all([fetch(urlrigel), fetch(urlp60)]);
         const dataR = await resR.json();
-        datosp60global = (await resP.json()).periodic_20 || [];
+        const jsonP = await resP.json();
+        datosp60global = jsonP.periodic_20 || [];
 
         // Renderizar tabla principal
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
             const lat = parseFloat(v?.localizacionVehiculo[0]?.latitud);
             const lon = parseFloat(v?.localizacionVehiculo[0]?.longitud);
+            
             const ubic = (lat && lon) ? obtenerNomenclaturaCanopi(lat, lon) : '-';
+            const dist = (lat && lon) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2) : '-';
+            const tiempo = (dist !== '-') ? (dist * 4).toFixed(0) : '-';
+            const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+
             return `<tr>
-                <td>${i+1}</td><td>${item.system_name}</td><td>${item.vehicle_code}</td><td>${item.issue_description}</td>
-                <td>${item.date_created}</td><td>${item.days_off}</td><td>${item.current_status}</td><td>${v?.idRuta || '-'}</td>
-                <td><b>${ubic}</b> <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
+                <td>${i+1}</td>
+                <td>${item.system_name}</td>
+                <td>${item.vehicle_code}</td>
+                <td>${item.issue_description}</td>
+                <td>${item.date_created}</td>
+                <td>${item.days_off}</td>
+                <td>${item.current_status}</td>
+                <td>${v?.idRuta || '-'}</td>
+                <td style="font-size: 11px;">
+                    <b style="color:${colorUbic}">${ubic}</b> | 
+                    <span style="color:#7f8c8d">${dist}km (${tiempo}min)</span> 
+                    ${(lat) ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>` : ''}
+                </td>
             </tr>`;
         }).join('');
 
-        // --- ACTIVACIÓN DEL BOTÓN "B" Y TEXTAREA ---
+        // Ocultar loader y activar botón "b"
         document.getElementById("loader").style.display = "none";
         const btnB = document.getElementById("checkActivar");
         const contenedor = document.getElementById("contenedor-entrada");
         
-        btnB.disabled = false; // Habilita el check
+        btnB.disabled = false;
         btnB.addEventListener("change", () => {
             contenedor.style.display = btnB.checked ? "block" : "none";
         });
 
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
 
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Error cargando datos:", e); 
+        document.getElementById("loader").innerHTML = "Error al cargar las APIs.";
+    }
 }
 
 ejecutar();
-                                               
