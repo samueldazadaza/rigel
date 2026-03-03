@@ -19,12 +19,25 @@ const configCanopis = {
     "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
 };
 
+let datosrigelglobal = [];
 let datosp60global = [];
+let jsonEnriquecidoGlobal = [];
 
 // --- FUNCIONES GEOGRÁFICAS ---
 
+function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
 function obtenerNomenclaturaCanopi(latV, lonV) {
-    if (!latV || !lonV) return "SIN GPS";
+    if (!latV || !lonV) return "-";
     try {
         let mejorClave = "A_Ori";
         let minDistanceDegrees = Infinity;
@@ -53,37 +66,36 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         const numero = Math.round(c.min + (progreso * (c.max - c.min)));
         
         return `${c.label}${numero}`;
-    } catch (e) { return "ERROR"; }
+    } catch (e) { return "Err GPS"; }
 }
 
-// --- LOGICA DE RECONOCIMIENTO DINÁMICO ---
+// --- LOGICA DE RECONOCIMIENTO DINÁMICO (TEXTAREA) ---
 
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
     if (!textarea || !resultadoDiv) return;
 
-    const lineas = textarea.value.split(/\n/); // Separar por saltos de línea
-    let htmlResultados = "<strong>Resultados detectados:</strong><br><ul>";
+    const lineas = textarea.value.split(/\n/);
+    let htmlResultados = "<strong>Resultados detectados:</strong><br><ul style='list-style:none; padding:0;'>";
 
     lineas.forEach(linea => {
-        const codigoLimpio = linea.trim();
-        if (codigoLimpio === "") return;
+        const codigoOriginal = linea.trim();
+        if (codigoOriginal === "") return;
 
-        // Buscamos el vehículo en los datos de P60
-        // Convertimos Z67-4034 a Z674034 para comparar con el API
-        const idSinGuion = codigoLimpio.replace("-", "");
-        const vehiculo = datosp60global.find(v => v.idVehiculo === idSinGuion);
+        // Limpiar para buscar: Z67-4034 -> Z674034
+        const idBusqueda = codigoOriginal.replace(/-/g, "");
+        const vehiculo = datosp60global.find(v => v.idVehiculo === idBusqueda);
 
         if (vehiculo && vehiculo.localizacionVehiculo[0]) {
             const lat = parseFloat(vehiculo.localizacionVehiculo[0].latitud);
             const lon = parseFloat(vehiculo.localizacionVehiculo[0].longitud);
             const ubicacion = obtenerNomenclaturaCanopi(lat, lon);
+            const color = (ubicacion === "EN RUTA") ? "#27ae60" : "#d35400";
             
-            const color = ubicacion === "EN RUTA" ? "green" : "orange";
-            htmlResultados += `<li>${codigoLimpio}: <b style="color:${color}">${ubicacion}</b></li>`;
+            htmlResultados += `<li>📍 ${codigoOriginal}: <b style="color:${color}">${ubicacion}</b></li>`;
         } else {
-            htmlResultados += `<li>${codigoLimpio}: <i style="color:gray">No encontrado</i></li>`;
+            htmlResultados += `<li>❌ ${codigoOriginal}: <span style="color:gray">No hallado</span></li>`;
         }
     });
 
@@ -91,29 +103,97 @@ function procesarTextoPegado() {
     resultadoDiv.innerHTML = htmlResultados;
 }
 
-// --- PETICIONES API ---
+// --- CAPTURA Y ENRIQUECIMIENTO ---
 
-async function cargarDatosP60() {
+async function funcionObtenerDatosRigel() {
+    try {
+        const response = await fetch(urlrigel);
+        const datos = await response.json();
+        datosrigelglobal = datos.data || [];
+    } catch (error) { console.error("Error Rigel:", error); }
+}
+
+async function funcionObtenerDatosP60() {
     try {
         const response = await fetch(urlp60);
-        const data = await response.json();
-        datosp60global = data.periodic_20 || [];
-        console.log("✅ Datos P60 cargados para búsqueda dinámica");
-    } catch (error) {
-        console.error("Error al cargar P60:", error);
-    }
+        const datosp60 = await response.json();
+        datosp60global = datosp60.periodic_20 || [];
+    } catch (error) { console.error("Error P60:", error); }
 }
 
-// --- INICIALIZACIÓN ---
+function enriquecerDatos() {
+    jsonEnriquecidoGlobal = datosrigelglobal.map((incidente) => {
+        const datoP60 = datosp60global.find((vehiculo) => {
+            const idVehiculoFormateado = vehiculo.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
+            return idVehiculoFormateado === incidente.vehicle_code;
+        });
+        return {
+            ...incidente,
+            ...(datoP60 && {
+                idRuta: datoP60.idRuta,
+                idVehiculo: datoP60.idVehiculo,
+                localizacionVehiculo: datoP60.localizacionVehiculo[0]
+            })
+        };
+    });
+}
 
-async function iniciar() {
-    await cargarDatosP60();
+// --- RENDERIZADO DE TABLA ---
+
+function mostrarDatosEnriquecidos(datos) {
+    const contenedor = document.getElementById("tablaEnriquecida");
+    if (!contenedor) return;
+
+    const filasHtml = datos.map((item, index) => {
+        const lat = parseFloat(item.localizacionVehiculo?.latitud);
+        const lng = parseFloat(item.localizacionVehiculo?.longitud);
+
+        const posicionPatio = (lat && lng) ? obtenerNomenclaturaCanopi(lat, lng) : '-';
+        const colorEstado = posicionPatio === "EN RUTA" ? "#27ae60" : "#d35400";
+        
+        const distVal = (lat && lng) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lng).toFixed(2) : '-';
+        const tiempo = distVal !== '-' ? (distVal * 4).toFixed(0) : '-';
+        const mapsUrl = (lat && lng) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
+
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.system_name || '-'}</td>
+                <td>${item.vehicle_code || '-'}</td>
+                <td>${item.issue_description || '-'}</td>
+                <td>${item.date_created || '-'}</td>
+                <td>${item.days_off ?? '-'}</td>
+                <td>${item.current_status || '-'}</td>
+                <td>${item.idRuta || '-'}</td>
+                <td style="font-family: sans-serif; font-size: 13px;">
+                    <b style="color: ${colorEstado};">${posicionPatio}</b> 
+                    <span style="color: #7f8c8d; margin-left: 5px;">| ${distVal}km (${tiempo}min)</span>
+                    <a href="${mapsUrl}" target="_blank" style="text-decoration:none; margin-left: 5px;">📍</a>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    contenedor.innerHTML = filasHtml;
+    const loader = document.getElementById("loader");
+    if (loader) loader.style.display = "none";
     
+    // --- ACTIVAR TEXTAREA DESPUÉS DE CARGAR TABLA ---
     const textarea = document.getElementById("campo-texto");
     if (textarea) {
-        // Detecta cuando el usuario pega texto o escribe
         textarea.addEventListener("input", procesarTextoPegado);
+        console.log("⌨️ Buscador textarea activado.");
     }
 }
 
-iniciar();
+// --- INICIO ---
+
+async function ejecutarProcesoCompleto() {
+    console.log("🚀 Iniciando carga...");
+    await funcionObtenerDatosRigel();
+    await funcionObtenerDatosP60();
+    enriquecerDatos();
+    mostrarDatosEnriquecidos(jsonEnriquecidoGlobal);
+}
+
+ejecutarProcesoCompleto();
