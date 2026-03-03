@@ -64,6 +64,7 @@ function procesarTextoPegado() {
             const lon = parseFloat(v.localizacionVehiculo[0].longitud);
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
             const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
+            const tiempo = (dist * 4).toFixed(0);
             const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             
             tabla += `<tr>
@@ -71,7 +72,7 @@ function procesarTextoPegado() {
                 <td style="color:${colorUbic}"><b>${ubic}</b></td>
                 <td>${v.idRuta || '-'}</td>
                 <td>${dist} km</td>
-                <td>${(dist * 4).toFixed(0)} min</td>
+                <td>${tiempo} min</td>
                 <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         } else {
@@ -92,22 +93,26 @@ async function ejecutar() {
         // Renderizar tabla principal
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
-            const lat = parseFloat(v?.localizacionVehiculo[0]?.latitud);
-            const lon = parseFloat(v?.localizacionVehiculo[0]?.longitud);
             
-            const ubic = (lat && lon) ? obtenerNomenclaturaCanopi(lat, lon) : '-';
-            const dist = (lat && lon) ? calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2) : '-';
-            const tiempo = (dist !== '-') ? (dist * 4).toFixed(0) : '-';
-            const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+            let lat = null, lon = null, ubic = '-', dist = '-', tiempo = '-', colorUbic = '#000';
+
+            if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
+                lat = parseFloat(v.localizacionVehiculo[0].latitud);
+                lon = parseFloat(v.localizacionVehiculo[0].longitud);
+                ubic = obtenerNomenclaturaCanopi(lat, lon);
+                dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
+                tiempo = (dist * 4).toFixed(0);
+                colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+            }
 
             return `<tr>
                 <td>${i+1}</td>
-                <td>${item.system_name}</td>
-                <td>${item.vehicle_code}</td>
-                <td>${item.issue_description}</td>
-                <td>${item.date_created}</td>
-                <td>${item.days_off}</td>
-                <td>${item.current_status}</td>
+                <td>${item.system_name || '-'}</td>
+                <td>${item.vehicle_code || '-'}</td>
+                <td>${item.issue_description || '-'}</td>
+                <td>${item.date_created || '-'}</td>
+                <td>${item.days_off ?? '-'}</td>
+                <td>${item.current_status || '-'}</td>
                 <td>${v?.idRuta || '-'}</td>
                 <td style="font-size: 11px;">
                     <b style="color:${colorUbic}">${ubic}</b> | 
@@ -117,15 +122,17 @@ async function ejecutar() {
             </tr>`;
         }).join('');
 
-        // Ocultar loader y activar botón "b"
+        // Ocultar loader y activar botón "checkActivar"
         document.getElementById("loader").style.display = "none";
         const btnB = document.getElementById("checkActivar");
         const contenedor = document.getElementById("contenedor-entrada");
         
-        btnB.disabled = false;
-        btnB.addEventListener("change", () => {
-            contenedor.style.display = btnB.checked ? "block" : "none";
-        });
+        if (btnB) {
+            btnB.disabled = false;
+            btnB.addEventListener("change", () => {
+                contenedor.style.display = btnB.checked ? "block" : "none";
+            });
+        }
 
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
 
@@ -136,3 +143,4 @@ async function ejecutar() {
 }
 
 ejecutar();
+                
