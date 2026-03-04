@@ -10,11 +10,14 @@ const configCanopis = {
     "B_Occ": { p1: { lat: 4.700375, lon: -74.163375 }, pn: { lat: 4.701038, lon: -74.162702 }, min: 62, max: 30, label: "B" },
     "C_Ori": { p1: { lat: 4.700384, lon: -74.163653 }, pn: { lat: 4.701113, lon: -74.162872 }, min: 1, max: 36, label: "C" },
     "C_Occ": { p1: { lat: 4.700426, lon: -74.163848 }, pn: { lat: 4.701217, lon: -74.163023 }, min: 72, max: 37, label: "C" },
-    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.701359, lon: -74.163202 }, min: 1, max: 45, label: "D" },
+    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.700783, lon: -74.163744 }, min: 1, max: 18, label: "D" },
     "E": { p1: { lat: 4.700549, lon: -74.164279 }, pn: { lat: 4.701457, lon: -74.163335 }, min: 1, max: 45, label: "E" },
-    "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 50, label: "F" },
-    "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 51, label: "F" },
-    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
+    "F_Ori_corto": { p1: { lat: 4.700419, lon: -74.164710 }, pn: { lat: 4.700697, lon: -74.164409 }, min: 1, max: 15, label: "F" },
+        "F_Ori_largo": { p1: { lat: 4.700791, lon: -74.164305 }, pn: { lat: 4.701495, lon: -74.163574 }, min: 16, max: 51, label: "F" },
+        "F_Occ_corto": { p1: { lat: 4.700462, lon: -74.164878 }, pn: { lat: 4.700801, lon: -74.164515 }, min: 106, max: 89, label: "F" },
+    "F_Occ_largo": { p1: { lat: 4.700905, lon: -74.164415 }, pn: { lat: 4.701623, lon: -74.163662 }, min: 88, max: 52, label: "F" },
+    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" },
+        "uf17": { p1: { lat: 4.700903, lon: -74.163696 }, pn: { lat: 4.701182, lon: -74.163408 }, min: 10, max: 1, label: "UF17-" },
 };
 
 let datosp60global = [];
