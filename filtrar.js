@@ -43,7 +43,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     const c = configCanopis[mejorClave];
     let progreso = ((lonV - c.p1.lon) * (c.pn.lon - c.p1.lon) + (latV - c.p1.lat) * (c.pn.lat - c.p1.lat)) / 
                    (Math.pow(c.pn.lon - c.p1.lon, 2) + Math.pow(c.pn.lat - c.p1.lat, 2));
-    if (progreso < -0.15 || progreso > 1.15) return "EN RUTA";
+    if (progreso < -0.25 || progreso > 1.25) return "EN RUTA";
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
