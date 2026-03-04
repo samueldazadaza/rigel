@@ -4,20 +4,17 @@ const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
 
 const configCanopis = {
-    "A_Ori": { p1: { lat: 4.700375, lon: -74.162764 }, pn: { lat: 4.700792, lon: -74.162336 }, min: 1, max: 21, label: "A" },
-    "A_Occ": { p1: { lat: 4.700336, lon: -74.163010 }, pn: { lat: 4.700871, lon: -74.162448 }, min: 48, max: 22, label: "A" },
-    "B_Ori": { p1: { lat: 4.700329, lon: -74.163228 }, pn: { lat: 4.700889, lon: -74.162664 }, min: 1, max: 29, label: "B" },
-    "B_Occ": { p1: { lat: 4.700375, lon: -74.163375 }, pn: { lat: 4.701038, lon: -74.162702 }, min: 62, max: 30, label: "B" },
+    "A_Ori": { p1: { lat: 4.700375, lon: -74.162764 }, pn: { lat: 4.700792, lon: -74.162336 }, min: 1, max: 24, label: "A" },
+    "A_Occ": { p1: { lat: 4.700336, lon: -74.163010 }, pn: { lat: 4.700871, lon: -74.162448 }, min: 48, max: 25, label: "A" },
+    "B_Ori": { p1: { lat: 4.700329, lon: -74.163228 }, pn: { lat: 4.700889, lon: -74.162664 }, min: 1, max: 31, label: "B" },
+    "B_Occ": { p1: { lat: 4.700375, lon: -74.163375 }, pn: { lat: 4.701038, lon: -74.162702 }, min: 62, max: 32, label: "B" },
     "C_Ori": { p1: { lat: 4.700384, lon: -74.163653 }, pn: { lat: 4.701113, lon: -74.162872 }, min: 1, max: 36, label: "C" },
     "C_Occ": { p1: { lat: 4.700426, lon: -74.163848 }, pn: { lat: 4.701217, lon: -74.163023 }, min: 72, max: 37, label: "C" },
-    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.700783, lon: -74.163744 }, min: 1, max: 18, label: "D" },
+    "D": { p1: { lat: 4.700431, lon: -74.164127 }, pn: { lat: 4.701359, lon: -74.163202 }, min: 1, max: 45, label: "D" },
     "E": { p1: { lat: 4.700549, lon: -74.164279 }, pn: { lat: 4.701457, lon: -74.163335 }, min: 1, max: 45, label: "E" },
-    "F_Ori_corto": { p1: { lat: 4.700419, lon: -74.164710 }, pn: { lat: 4.700697, lon: -74.164409 }, min: 1, max: 15, label: "F" },
-        "F_Ori_largo": { p1: { lat: 4.700724, lon: -74.164383 }, pn: { lat: 4.701495, lon: -74.163574 }, min: 12, max: 51, label: "F" },
-        "F_Occ_corto": { p1: { lat: 4.700463, lon: -74.164873 }, pn: { lat: 4.700801, lon: -74.164515 }, min: 106, max: 89, label: "F" },
-    "F_Occ_largo": { p1: { lat: 4.700818, lon: -74.164487 }, pn: { lat: 4.701623, lon: -74.163662 }, min: 92, max: 52, label: "F" },
-    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" },
-        "uf17": { p1: { lat: 4.700903, lon: -74.163696 }, pn: { lat: 4.701182, lon: -74.163408 }, min: 10, max: 1, label: "UF17-" }
+    "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 51, label: "F" },
+    "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 52, label: "F" },
+    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
 };
 
 let datosp60global = [];
