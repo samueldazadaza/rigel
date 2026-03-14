@@ -28,11 +28,9 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
-// --- NUEVA FUNCIÓN PARA CALCULAR TIEMPO TRANSCURRIDO ---
 function calcularHaceCuanto(fechaStr) {
-    if (!fechaStr) return "-";
+    if (!fechaStr) return { texto: "-", alerta: false };
     try {
-        // Formato esperado: "14/03/2026 10:53:15.105"
         const partes = fechaStr.split(' ');
         const fechaPartes = partes[0].split('/');
         const horaPartes = partes[1].split('.')[0]; 
@@ -42,13 +40,16 @@ function calcularHaceCuanto(fechaStr) {
         const conexion = new Date(fechaISO);
         const difSeg = Math.floor((ahora - conexion) / 1000);
 
-        if (difSeg < 60) return `${difSeg} seg`;
+        if (difSeg < 60) return { texto: `${difSeg} seg`, alerta: false };
         const difMin = Math.floor(difSeg / 60);
-        if (difMin < 60) return `${difMin} min`;
+        
+        // Semáforo: Alerta si es mayor o igual a 5 minutos
+        const alerta = difMin >= 5;
+
+        if (difMin < 60) return { texto: `${difMin} min`, alerta: alerta };
         const difHoras = Math.floor(difMin / 60);
-        if (difHoras < 24) return `${difHoras} h`;
-        return "+1 día";
-    } catch (e) { return "Error"; }
+        return { texto: `${difHoras} h`, alerta: true };
+    } catch (e) { return { texto: "Error", alerta: true }; }
 }
 
 function obtenerNomenclaturaCanopi(latV, lonV) {
@@ -67,22 +68,89 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- LÓGICA DE BÚSQUEDA EN TEXTAREA ---
+// --- LÓGICA DE BÚSQUEDA Y TABLA DINÁMICA ---
+
+function ordenarTabla(n, idTabla) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById(idTabla);
+    switching = true;
+    dir = "asc"; 
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[n];
+            y = rows[i + 1].getElementsByTagName("TD")[n];
+            if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true; break;
+                }
+            } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true; break;
+                }
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount ++;      
+        } else {
+            if (switchcount == 0 && dir == "asc") {
+                dir = "desc"; switching = true;
+            }
+        }
+    }
+}
+
+function filtrarTablaInterna() {
+    var input, filter, table, tr, td, i, j, visible;
+    table = document.getElementById("tablaResultadosBusqueda");
+    tr = table.getElementsByTagName("tr");
+    var inputs = document.querySelectorAll('.filter-input');
+
+    for (i = 1; i < tr.length; i++) {
+        visible = true;
+        for (j = 0; j < inputs.length; j++) {
+            input = inputs[j];
+            filter = input.value.toUpperCase();
+            td = tr[i].getElementsByTagName("td")[j];
+            if (td) {
+                if (td.innerHTML.toUpperCase().indexOf(filter) == -1) {
+                    visible = false;
+                }
+            }
+        }
+        tr[i].style.display = visible ? "" : "none";
+    }
+}
+
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
     if (!textarea.value.trim()) { resultadoDiv.innerHTML = "Esperando datos..."; return; }
 
-    let tabla = `<table class="table table-sm table-bordered bg-white" style="font-size:11px">
+    let tabla = `
+    <table class="table table-sm table-bordered bg-white" id="tablaResultadosBusqueda" style="font-size:11px">
         <thead class="table-secondary">
             <tr>
-                <th>ID Bus</th>
-                <th>Ubicación</th>
-                <th>Ruta</th>
+                <th onclick="ordenarTabla(0, 'tablaResultadosBusqueda')" style="cursor:pointer">ID Bus ↕</th>
+                <th onclick="ordenarTabla(1, 'tablaResultadosBusqueda')" style="cursor:pointer">Ubicación ↕</th>
+                <th onclick="ordenarTabla(2, 'tablaResultadosBusqueda')" style="cursor:pointer">Ruta ↕</th>
                 <th>fechaHoraEnvioDato</th>
-                <th>Hace</th>
+                <th onclick="ordenarTabla(4, 'tablaResultadosBusqueda')" style="cursor:pointer">Hace ↕</th>
                 <th>Km</th>
                 <th>Mapa</th>
+            </tr>
+            <tr class="filter-row">
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
+                <td></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
+                <td></td>
+                <td></td>
             </tr>
         </thead><tbody>`;
 
@@ -96,18 +164,18 @@ function procesarTextoPegado() {
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
             const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
             
-            // Datos de tiempo solicitados
             const envio = v.fechaHoraEnvioDato || '-';
-            const haceCuanto = calcularHaceCuanto(v.fechaHoraLecturaDato);
+            const tiempoObj = calcularHaceCuanto(v.fechaHoraLecturaDato);
 
             const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+            const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50"; // Rojo si > 5min
             
             tabla += `<tr>
                 <td><b>${cod}</b></td>
                 <td style="color:${colorUbic}"><b>${ubic}</b></td>
                 <td>${v.idRuta || '-'}</td>
                 <td style="font-size: 10px;">${envio}</td>
-                <td style="font-weight: bold;">${haceCuanto}</td>
+                <td style="color:${colorHace}; font-weight: bold;">${tiempoObj.texto}</td>
                 <td>${dist} km</td>
                 <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
@@ -118,7 +186,7 @@ function procesarTextoPegado() {
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
-// --- PROCESO PRINCIPAL ---
+// --- PROCESO PRINCIPAL (SE MANTIENE IGUAL) ---
 async function ejecutar() {
     try {
         const [resR, resP] = await Promise.all([fetch(urlrigel), fetch(urlp60)]);
@@ -126,10 +194,8 @@ async function ejecutar() {
         const jsonP = await resP.json();
         datosp60global = jsonP.periodic_20 || [];
 
-        // Renderizar tabla principal
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
-            
             let lat = null, lon = null, ubic = '-', dist = '-', tiempo = '-', colorUbic = '#000';
 
             if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
@@ -158,7 +224,6 @@ async function ejecutar() {
             </tr>`;
         }).join('');
 
-        // Ocultar loader y activar botón "checkActivar"
         document.getElementById("loader").style.display = "none";
         const btnB = document.getElementById("checkActivar");
         const contenedor = document.getElementById("contenedor-entrada");
@@ -169,14 +234,12 @@ async function ejecutar() {
                 contenedor.style.display = btnB.checked ? "block" : "none";
             });
         }
-
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
-
     } catch (e) { 
-        console.error("Error cargando datos:", e); 
+        console.error("Error:", e); 
         document.getElementById("loader").innerHTML = "Error al cargar las APIs.";
     }
 }
 
 ejecutar();
-            
+        
