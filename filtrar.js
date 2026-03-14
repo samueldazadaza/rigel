@@ -1,4 +1,4 @@
-// --- CONFIGURACIÓN ---
+// --- CONFIGURACIÓN Y CONSTANTES ---
 const urlrigel = 'https://api-rigel2.vercel.app/';
 const urlp60 = 'http://10.0.22.50:8003/api-vehiculos-mapa';
 const puntoReferencia = { lat: 4.700801, lng: -74.162544 };
@@ -19,8 +19,7 @@ const configCanopis = {
 
 let datosp60global = [];
 
-// --- UTILIDADES ---
-
+// --- FUNCIONES GEOGRÁFICAS ---
 function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -29,21 +28,26 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
+// --- NUEVA FUNCIÓN PARA CALCULAR TIEMPO TRANSCURRIDO ---
 function calcularHaceCuanto(fechaStr) {
-    if (!fechaStr) return "Sin datos";
+    if (!fechaStr) return "-";
     try {
+        // Formato esperado: "14/03/2026 10:53:15.105"
         const partes = fechaStr.split(' ');
         const fechaPartes = partes[0].split('/');
         const horaPartes = partes[1].split('.')[0]; 
         const fechaISO = `${fechaPartes[2]}-${fechaPartes[1]}-${fechaPartes[0]}T${horaPartes}`;
+        
         const ahora = new Date();
         const conexion = new Date(fechaISO);
-        const difSegundos = Math.floor((ahora - conexion) / 1000);
+        const difSeg = Math.floor((ahora - conexion) / 1000);
 
-        if (difSegundos < 60) return `${difSegundos} seg`;
-        const difMinutos = Math.floor(difSegundos / 60);
-        if (difMinutos < 60) return `${difMinutos} min`;
-        return `${Math.floor(difMinutos / 60)} h`;
+        if (difSeg < 60) return `${difSeg} seg`;
+        const difMin = Math.floor(difSeg / 60);
+        if (difMin < 60) return `${difMin} min`;
+        const difHoras = Math.floor(difMin / 60);
+        if (difHoras < 24) return `${difHoras} h`;
+        return "+1 día";
     } catch (e) { return "Error"; }
 }
 
@@ -63,8 +67,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- LÓGICA DE BÚSQUEDA (DIV) ---
-
+// --- LÓGICA DE BÚSQUEDA EN TEXTAREA ---
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
@@ -75,9 +78,10 @@ function procesarTextoPegado() {
             <tr>
                 <th>ID Bus</th>
                 <th>Ubicación</th>
-                <th>Envío (Dato)</th>
-                <th>Hace</th>
                 <th>Ruta</th>
+                <th>fechaHoraEnvioDato</th>
+                <th>Hace</th>
+                <th>Km</th>
                 <th>Mapa</th>
             </tr>
         </thead><tbody>`;
@@ -86,35 +90,35 @@ function procesarTextoPegado() {
         const cod = linea.trim();
         if (!cod) return;
         const v = datosp60global.find(item => item.idVehiculo === cod.replace(/-/g, ""));
-        
-        if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
+        if (v && v.localizacionVehiculo[0]) {
             const lat = parseFloat(v.localizacionVehiculo[0].latitud);
             const lon = parseFloat(v.localizacionVehiculo[0].longitud);
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
+            const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
+            
+            // Datos de tiempo solicitados
+            const envio = v.fechaHoraEnvioDato || '-';
             const haceCuanto = calcularHaceCuanto(v.fechaHoraLecturaDato);
-            
-            // Extraemos solo la hora de envío para el Div
-            const envioHora = v.fechaHoraEnvioDato ? v.fechaHoraEnvioDato.split(' ')[1].split('.')[0] : '-';
-            
+
             const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             
             tabla += `<tr>
                 <td><b>${cod}</b></td>
                 <td style="color:${colorUbic}"><b>${ubic}</b></td>
-                <td>${envioHora}</td>
-                <td>${haceCuanto}</td>
                 <td>${v.idRuta || '-'}</td>
+                <td style="font-size: 10px;">${envio}</td>
+                <td style="font-weight: bold;">${haceCuanto}</td>
+                <td>${dist} km</td>
                 <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         } else {
-            tabla += `<tr><td>${cod}</td><td colspan="5" class="text-muted text-center">Sin reporte GPS</td></tr>`;
+            tabla += `<tr><td>${cod}</td><td colspan="6" class="text-muted text-center">Sin reporte GPS</td></tr>`;
         }
     });
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
 // --- PROCESO PRINCIPAL ---
-
 async function ejecutar() {
     try {
         const [resR, resP] = await Promise.all([fetch(urlrigel), fetch(urlp60)]);
@@ -122,19 +126,18 @@ async function ejecutar() {
         const jsonP = await resP.json();
         datosp60global = jsonP.periodic_20 || [];
 
+        // Renderizar tabla principal
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
-            let lat = null, lon = null, ubic = '-', dist = '-', haceCuanto = '-', colorConexion = '#000', colorUbic = '#000';
+            
+            let lat = null, lon = null, ubic = '-', dist = '-', tiempo = '-', colorUbic = '#000';
 
             if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
                 lat = parseFloat(v.localizacionVehiculo[0].latitud);
                 lon = parseFloat(v.localizacionVehiculo[0].longitud);
                 ubic = obtenerNomenclaturaCanopi(lat, lon);
                 dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
-                haceCuanto = calcularHaceCuanto(v.fechaHoraLecturaDato);
-                
-                const minutosInt = haceCuanto.includes("min") ? parseInt(haceCuanto) : 0;
-                colorConexion = (haceCuanto.includes("h") || minutosInt >= 5) ? "#e74c3c" : "#27ae60";
+                tiempo = (dist * 4).toFixed(0);
                 colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             }
 
@@ -144,19 +147,19 @@ async function ejecutar() {
                 <td>${item.vehicle_code || '-'}</td>
                 <td>${item.issue_description || '-'}</td>
                 <td>${item.date_created || '-'}</td>
-                <td style="color:${colorConexion}"><b>${haceCuanto}</b></td>
+                <td>${item.days_off ?? '-'}</td>
+                <td>${item.current_status || '-'}</td>
                 <td>${v?.idRuta || '-'}</td>
                 <td style="font-size: 11px;">
                     <b style="color:${colorUbic}">${ubic}</b> | 
-                    <span style="color:#7f8c8d">${dist}km</span> 
+                    <span style="color:#7f8c8d">${dist}km (${tiempo}min)</span> 
                     ${(lat) ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>` : ''}
                 </td>
             </tr>`;
         }).join('');
 
+        // Ocultar loader y activar botón "checkActivar"
         document.getElementById("loader").style.display = "none";
-        
-        // Activar el checkbox para mostrar/ocultar el contenedor de entrada
         const btnB = document.getElementById("checkActivar");
         const contenedor = document.getElementById("contenedor-entrada");
         
@@ -170,9 +173,10 @@ async function ejecutar() {
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
 
     } catch (e) { 
-        console.error("Error:", e); 
+        console.error("Error cargando datos:", e); 
+        document.getElementById("loader").innerHTML = "Error al cargar las APIs.";
     }
 }
 
 ejecutar();
-                
+            
