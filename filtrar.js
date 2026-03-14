@@ -19,7 +19,7 @@ const configCanopis = {
 
 let datosp60global = [];
 
-// --- FUNCIONES GEOGRÁFICAS ---
+// --- UTILIDADES GEOGRÁFICAS Y TIEMPO ---
 function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -35,15 +35,12 @@ function calcularHaceCuanto(fechaStr) {
         const fechaPartes = partes[0].split('/');
         const horaPartes = partes[1].split('.')[0]; 
         const fechaISO = `${fechaPartes[2]}-${fechaPartes[1]}-${fechaPartes[0]}T${horaPartes}`;
-        
         const ahora = new Date();
         const conexion = new Date(fechaISO);
         const difSeg = Math.floor((ahora - conexion) / 1000);
 
         if (difSeg < 60) return { texto: `${difSeg} seg`, alerta: false };
         const difMin = Math.floor(difSeg / 60);
-        
-        // Semáforo: Alerta si es mayor o igual a 5 minutos
         const alerta = difMin >= 5;
 
         if (difMin < 60) return { texto: `${difMin} min`, alerta: alerta };
@@ -68,7 +65,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- LÓGICA DE BÚSQUEDA Y TABLA DINÁMICA ---
+// --- LÓGICA DE ORDENAMIENTO Y FILTRADO ---
 
 function ordenarTabla(n, idTabla) {
     var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
@@ -78,18 +75,25 @@ function ordenarTabla(n, idTabla) {
     while (switching) {
         switching = false;
         rows = table.rows;
-        for (i = 1; i < (rows.length - 1); i++) {
+        // i=2 para saltar encabezado y fila de filtros
+        for (i = 2; i < (rows.length - 1); i++) {
             shouldSwitch = false;
             x = rows[i].getElementsByTagName("TD")[n];
             y = rows[i + 1].getElementsByTagName("TD")[n];
+            
+            // Lógica para ordenar números (Km) o texto
+            let valX = x.innerText.toLowerCase();
+            let valY = y.innerText.toLowerCase();
+            
+            if (!isNaN(parseFloat(valX)) && isFinite(valX)) {
+                valX = parseFloat(valX);
+                valY = parseFloat(valY);
+            }
+
             if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true; break;
-                }
+                if (valX > valY) { shouldSwitch = true; break; }
             } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true; break;
-                }
+                if (valX < valY) { shouldSwitch = true; break; }
             }
         }
         if (shouldSwitch) {
@@ -97,31 +101,25 @@ function ordenarTabla(n, idTabla) {
             switching = true;
             switchcount ++;      
         } else {
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc"; switching = true;
-            }
+            if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
         }
     }
 }
 
 function filtrarTablaInterna() {
-    var input, filter, table, tr, td, i, j, visible;
-    table = document.getElementById("tablaResultadosBusqueda");
-    tr = table.getElementsByTagName("tr");
+    var table = document.getElementById("tablaResultadosBusqueda");
+    var tr = table.getElementsByTagName("tr");
     var inputs = document.querySelectorAll('.filter-input');
 
-    for (i = 1; i < tr.length; i++) {
-        visible = true;
-        for (j = 0; j < inputs.length; j++) {
-            input = inputs[j];
-            filter = input.value.toUpperCase();
-            td = tr[i].getElementsByTagName("td")[j];
-            if (td) {
-                if (td.innerHTML.toUpperCase().indexOf(filter) == -1) {
-                    visible = false;
-                }
+    for (let i = 2; i < tr.length; i++) { // Empezar en 2 para saltar header y filtros
+        let visible = true;
+        inputs.forEach((input, index) => {
+            let filter = input.value.toUpperCase();
+            let td = tr[i].getElementsByTagName("td")[index];
+            if (td && td.innerText.toUpperCase().indexOf(filter) === -1) {
+                visible = false;
             }
-        }
+        });
         tr[i].style.display = visible ? "" : "none";
     }
 }
@@ -134,23 +132,23 @@ function procesarTextoPegado() {
     let tabla = `
     <table class="table table-sm table-bordered bg-white" id="tablaResultadosBusqueda" style="font-size:11px">
         <thead class="table-secondary">
-            <tr>
-                <th onclick="ordenarTabla(0, 'tablaResultadosBusqueda')" style="cursor:pointer">ID Bus ↕</th>
-                <th onclick="ordenarTabla(1, 'tablaResultadosBusqueda')" style="cursor:pointer">Ubicación ↕</th>
-                <th onclick="ordenarTabla(2, 'tablaResultadosBusqueda')" style="cursor:pointer">Ruta ↕</th>
-                <th>fechaHoraEnvioDato</th>
-                <th onclick="ordenarTabla(4, 'tablaResultadosBusqueda')" style="cursor:pointer">Hace ↕</th>
-                <th>Km</th>
-                <th>Mapa</th>
+            <tr style="cursor:pointer">
+                <th onclick="ordenarTabla(0, 'tablaResultadosBusqueda')">ID Bus ↕</th>
+                <th onclick="ordenarTabla(1, 'tablaResultadosBusqueda')">Ubicación ↕</th>
+                <th onclick="ordenarTabla(2, 'tablaResultadosBusqueda')">Ruta ↕</th>
+                <th onclick="ordenarTabla(3, 'tablaResultadosBusqueda')">Envío ↕</th>
+                <th onclick="ordenarTabla(4, 'tablaResultadosBusqueda')">Hace ↕</th>
+                <th onclick="ordenarTabla(5, 'tablaResultadosBusqueda')">Km ↕</th>
+                <th onclick="ordenarTabla(6, 'tablaResultadosBusqueda')">Mapa ↕</th>
             </tr>
             <tr class="filter-row">
-                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
-                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
-                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
-                <td></td>
-                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="Filtrar..."></td>
-                <td></td>
-                <td></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
+                <td><input type="text" class="form-control form-control-sm filter-input" onkeyup="filtrarTablaInterna()" placeholder="..."></td>
             </tr>
         </thead><tbody>`;
 
@@ -163,12 +161,11 @@ function procesarTextoPegado() {
             const lon = parseFloat(v.localizacionVehiculo[0].longitud);
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
             const dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
-            
             const envio = v.fechaHoraEnvioDato || '-';
             const tiempoObj = calcularHaceCuanto(v.fechaHoraLecturaDato);
 
             const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
-            const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50"; // Rojo si > 5min
+            const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50";
             
             tabla += `<tr>
                 <td><b>${cod}</b></td>
@@ -176,8 +173,8 @@ function procesarTextoPegado() {
                 <td>${v.idRuta || '-'}</td>
                 <td style="font-size: 10px;">${envio}</td>
                 <td style="color:${colorHace}; font-weight: bold;">${tiempoObj.texto}</td>
-                <td>${dist} km</td>
-                <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
+                <td>${dist}</td>
+                <td class="text-center"><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         } else {
             tabla += `<tr><td>${cod}</td><td colspan="6" class="text-muted text-center">Sin reporte GPS</td></tr>`;
@@ -186,7 +183,7 @@ function procesarTextoPegado() {
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
-// --- PROCESO PRINCIPAL (SE MANTIENE IGUAL) ---
+// --- EJECUCIÓN ---
 async function ejecutar() {
     try {
         const [resR, resP] = await Promise.all([fetch(urlrigel), fetch(urlp60)]);
@@ -196,17 +193,14 @@ async function ejecutar() {
 
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
-            let lat = null, lon = null, ubic = '-', dist = '-', tiempo = '-', colorUbic = '#000';
-
-            if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
+            let lat = null, lon = null, ubic = '-', dist = '-', colorUbic = '#000';
+            if (v && v.localizacionVehiculo[0]) {
                 lat = parseFloat(v.localizacionVehiculo[0].latitud);
                 lon = parseFloat(v.localizacionVehiculo[0].longitud);
                 ubic = obtenerNomenclaturaCanopi(lat, lon);
                 dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
-                tiempo = (dist * 4).toFixed(0);
                 colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             }
-
             return `<tr>
                 <td>${i+1}</td>
                 <td>${item.system_name || '-'}</td>
@@ -216,30 +210,21 @@ async function ejecutar() {
                 <td>${item.days_off ?? '-'}</td>
                 <td>${item.current_status || '-'}</td>
                 <td>${v?.idRuta || '-'}</td>
-                <td style="font-size: 11px;">
-                    <b style="color:${colorUbic}">${ubic}</b> | 
-                    <span style="color:#7f8c8d">${dist}km (${tiempo}min)</span> 
-                    ${(lat) ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>` : ''}
-                </td>
+                <td style="font-size: 11px;"><b style="color:${colorUbic}">${ubic}</b> | ${dist}km</td>
             </tr>`;
         }).join('');
 
         document.getElementById("loader").style.display = "none";
         const btnB = document.getElementById("checkActivar");
-        const contenedor = document.getElementById("contenedor-entrada");
-        
         if (btnB) {
             btnB.disabled = false;
             btnB.addEventListener("change", () => {
-                contenedor.style.display = btnB.checked ? "block" : "none";
+                document.getElementById("contenedor-entrada").style.display = btnB.checked ? "block" : "none";
             });
         }
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
-    } catch (e) { 
-        console.error("Error:", e); 
-        document.getElementById("loader").innerHTML = "Error al cargar las APIs.";
-    }
+    } catch (e) { console.error(e); }
 }
 
 ejecutar();
-        
+                       
