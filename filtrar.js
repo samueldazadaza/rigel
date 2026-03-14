@@ -63,16 +63,23 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
 }
 
-// --- BUSCADOR FLOTANTE CON DATA EXTRA ---
+// --- LÓGICA DE BÚSQUEDA (DIV) ---
 
 function procesarTextoPegado() {
     const textarea = document.getElementById("campo-texto");
     const resultadoDiv = document.getElementById("resultado-busqueda");
-    if (!textarea.value.trim()) { resultadoDiv.innerHTML = ""; return; }
+    if (!textarea.value.trim()) { resultadoDiv.innerHTML = "Esperando datos..."; return; }
 
-    let tabla = `<table class="table table-sm table-bordered" style="font-size:10px; margin-bottom:0;">
-        <thead class="table-dark">
-            <tr><th>Bus</th><th>Ubic</th><th>Envío (Dato)</th><th>Lectura</th><th>Hace</th></tr>
+    let tabla = `<table class="table table-sm table-bordered bg-white" style="font-size:11px">
+        <thead class="table-secondary">
+            <tr>
+                <th>ID Bus</th>
+                <th>Ubicación</th>
+                <th>Envío (Dato)</th>
+                <th>Hace</th>
+                <th>Ruta</th>
+                <th>Mapa</th>
+            </tr>
         </thead><tbody>`;
 
     textarea.value.split(/\n/).forEach(linea => {
@@ -80,29 +87,33 @@ function procesarTextoPegado() {
         if (!cod) return;
         const v = datosp60global.find(item => item.idVehiculo === cod.replace(/-/g, ""));
         
-        if (v && v.localizacionVehiculo[0]) {
+        if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
             const lat = parseFloat(v.localizacionVehiculo[0].latitud);
             const lon = parseFloat(v.localizacionVehiculo[0].longitud);
             const ubic = obtenerNomenclaturaCanopi(lat, lon);
             const haceCuanto = calcularHaceCuanto(v.fechaHoraLecturaDato);
             
-            // Extraemos solo la hora de envío y lectura para que la tabla sea compacta
-            const hEnvio = v.fechaHoraEnvioDato ? v.fechaHoraEnvioDato.split(' ')[1].split('.')[0] : '-';
-            const hLectura = v.fechaHoraLecturaDato ? v.fechaHoraLecturaDato.split(' ')[1].split('.')[0] : '-';
+            // Extraemos solo la hora de envío para el Div
+            const envioHora = v.fechaHoraEnvioDato ? v.fechaHoraEnvioDato.split(' ')[1].split('.')[0] : '-';
+            
+            const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             
             tabla += `<tr>
                 <td><b>${cod}</b></td>
-                <td>${ubic}</td>
-                <td>${hEnvio}</td>
-                <td>${hLectura}</td>
-                <td><b>${hHace}</b></td>
+                <td style="color:${colorUbic}"><b>${ubic}</b></td>
+                <td>${envioHora}</td>
+                <td>${haceCuanto}</td>
+                <td>${v.idRuta || '-'}</td>
+                <td><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
+        } else {
+            tabla += `<tr><td>${cod}</td><td colspan="5" class="text-muted text-center">Sin reporte GPS</td></tr>`;
         }
     });
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
-// --- EJECUCIÓN PRINCIPAL ---
+// --- PROCESO PRINCIPAL ---
 
 async function ejecutar() {
     try {
@@ -113,7 +124,7 @@ async function ejecutar() {
 
         document.getElementById("tablaEnriquecida").innerHTML = (dataR.data || []).map((item, i) => {
             const v = datosp60global.find(bus => bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2') === item.vehicle_code);
-            let lat = null, lon = null, ubic = '-', dist = '-', haceCuanto = '-', colorConexion = '#000';
+            let lat = null, lon = null, ubic = '-', dist = '-', haceCuanto = '-', colorConexion = '#000', colorUbic = '#000';
 
             if (v && v.localizacionVehiculo && v.localizacionVehiculo[0]) {
                 lat = parseFloat(v.localizacionVehiculo[0].latitud);
@@ -124,31 +135,44 @@ async function ejecutar() {
                 
                 const minutosInt = haceCuanto.includes("min") ? parseInt(haceCuanto) : 0;
                 colorConexion = (haceCuanto.includes("h") || minutosInt >= 5) ? "#e74c3c" : "#27ae60";
+                colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
             }
 
             return `<tr>
                 <td>${i+1}</td>
-                <td>${item.vehicle_code}</td>
-                <td>${item.issue_description}</td>
+                <td>${item.system_name || '-'}</td>
+                <td>${item.vehicle_code || '-'}</td>
+                <td>${item.issue_description || '-'}</td>
+                <td>${item.date_created || '-'}</td>
                 <td style="color:${colorConexion}"><b>${haceCuanto}</b></td>
                 <td>${v?.idRuta || '-'}</td>
-                <td><b>${ubic}</b> | ${dist}km ${(lat) ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>` : ''}</td>
+                <td style="font-size: 11px;">
+                    <b style="color:${colorUbic}">${ubic}</b> | 
+                    <span style="color:#7f8c8d">${dist}km</span> 
+                    ${(lat) ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a>` : ''}
+                </td>
             </tr>`;
         }).join('');
 
         document.getElementById("loader").style.display = "none";
         
-        // Manejo del botón flotante "?"
-        const btnF = document.getElementById("boton-flotante");
-        const panel = document.getElementById("contenedor-entrada");
-        btnF.addEventListener("click", () => {
-            panel.style.display = (panel.style.display === "block") ? "none" : "block";
-        });
+        // Activar el checkbox para mostrar/ocultar el contenedor de entrada
+        const btnB = document.getElementById("checkActivar");
+        const contenedor = document.getElementById("contenedor-entrada");
+        
+        if (btnB) {
+            btnB.disabled = false;
+            btnB.addEventListener("change", () => {
+                contenedor.style.display = btnB.checked ? "block" : "none";
+            });
+        }
 
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
 
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Error:", e); 
+    }
 }
 
 ejecutar();
-    
+                
