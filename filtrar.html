@@ -58,6 +58,22 @@
       <a class="nav-item nav-link active" href="./filtrar.html">Filtrar</a>
     </nav>
 
+      <div class="switch-container mt-4">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="checkActivar" enabled>
+          <label class="form-check-label fw-bold" for="checkActivar">search</label>
+        </div>
+      </div>
+
+      <div id="contenedor-entrada" class="mt-3" style="display: none;">
+        <textarea id="campo-texto" class="form-control" rows="10" placeholder="Pega aquí los códigos separados por línea (Ej: Z67-4034)"></textarea>
+        <div id="resultado-busqueda" class="mt-2 p-3 border rounded bg-light">
+          <span class="text-muted italic">Resultados de búsqueda...</span>
+        </div>
+      </div>
+
+    
+    
     <div class="container-lg">
       <table>
         <thead>
@@ -93,19 +109,7 @@
         <p>Cargando datos...</p>
       </div>
 
-      <div class="switch-container mt-4">
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="checkActivar" disabled>
-          <label class="form-check-label fw-bold" for="checkActivar">b</label>
-        </div>
-      </div>
-
-      <div id="contenedor-entrada" class="mt-3" style="display: none;">
-        <textarea id="campo-texto" class="form-control" rows="10" placeholder="Pega aquí los códigos separados por línea (Ej: Z67-4034)"></textarea>
-        <div id="resultado-busqueda" class="mt-2 p-3 border rounded bg-light">
-          <span class="text-muted italic">Resultados de búsqueda...</span>
-        </div>
-      </div>
+      
     </div>
 
     <script src="filtrar.js"></script>
