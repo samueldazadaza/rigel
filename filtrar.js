@@ -217,7 +217,7 @@ async function ejecutar() {
         document.getElementById("loader").style.display = "none";
         const btnB = document.getElementById("checkActivar");
         if (btnB) {
-            btnB.disabled = true;
+            btnB.disabled = false;
             btnB.addEventListener("change", () => {
                 document.getElementById("contenedor-entrada").style.display = btnB.checked ? "block" : "none";
             });
