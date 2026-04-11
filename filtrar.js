@@ -17,6 +17,19 @@ const configCanopis = {
     "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
 };
 
+const aliasPosiciones = {
+    "D21": "Pintura",
+    "D23": "Cárcamo 2",
+    "D25": "Cárcamo 1",
+    "D27": "uf17-6",
+    "D29": "uf17-5",
+    "D31": "uf17-4",
+    "D33": "uf17-3",
+    "D35": "uf17-2",
+    "D37": "uf17-1"
+};
+
+
 let datosp60global = [];
 
 // --- UTILIDADES GEOGRÁFICAS Y TIEMPO ---
@@ -49,21 +62,38 @@ function calcularHaceCuanto(fechaStr) {
     } catch (e) { return { texto: "Error", alerta: true }; }
 }
 
+
+
 function obtenerNomenclaturaCanopi(latV, lonV) {
     if (!latV || !lonV) return "-";
     let mejorClave = "A_Ori", minDistanceDegrees = Infinity;
+    
     for (const [id, data] of Object.entries(configCanopis)) {
         const dist = Math.abs((data.pn.lon - data.p1.lon) * (data.p1.lat - latV) - (data.p1.lon - lonV) * (data.pn.lat - data.p1.lat)) / 
                      Math.sqrt(Math.pow(data.pn.lon - data.p1.lon, 2) + Math.pow(data.pn.lat - data.p1.lat, 2));
         if (dist < minDistanceDegrees) { minDistanceDegrees = dist; mejorClave = id; }
     }
+    
     if (minDistanceDegrees > 0.00045) return "EN RUTA";
+    
     const c = configCanopis[mejorClave];
     let progreso = ((lonV - c.p1.lon) * (c.pn.lon - c.p1.lon) + (latV - c.p1.lat) * (c.pn.lat - c.p1.lat)) / 
                    (Math.pow(c.pn.lon - c.p1.lon, 2) + Math.pow(c.pn.lat - c.p1.lat, 2));
+    
     if (progreso < -0.25 || progreso > 1.25) return "EN RUTA";
-    return `${c.label}${Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)))}`;
+
+    // --- Lógica de Alias ---
+    const nroPosicion = Math.round(c.min + (Math.max(0, Math.min(1, progreso)) * (c.max - c.min)));
+    const nomenclaturaBase = `${c.label}${nroPosicion}`;
+
+    // Si la nomenclatura existe en el diccionario, devuelve el alias; si no, la base.
+    return aliasPosiciones[nomenclaturaBase] || nomenclaturaBase;
 }
+
+
+                                 
+
+
 
 // --- LÓGICA DE ORDENAMIENTO Y FILTRADO ---
 
