@@ -43,8 +43,8 @@ const aliasPosiciones = {
 
 const estructuraMapa = [
     { label: "G", id: "G", gap: true },
-    { label: "F-OCC", id: "F_Occ", gap: false }, // Pegados
-    { label: "F-ORI", id: "F_Ori", gap: true },  // Espacio después del bloque
+    { label: "F-OCC", id: "F_Occ", gap: false },
+    { label: "F-ORI", id: "F_Ori", gap: true },
     { label: "E", id: "E", gap: true },
     { label: "D", id: "D", gap: true },
     { label: "C-OCC", id: "C_Occ", gap: false },
@@ -54,6 +54,7 @@ const estructuraMapa = [
     { label: "A-OCC", id: "A_Occ", gap: false },
     { label: "A-ORI", id: "A_Ori", gap: false }
 ];
+
 
 
 
@@ -245,66 +246,67 @@ function generarMapaVisual() {
     const contenedor = document.getElementById("mapa-patio");
     if (!contenedor) return;
 
-    // Calculamos el máximo de filas necesarias comparando todos los carriles
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
 
-    let html = `<table class="table table-sm table-bordered text-center" style="font-size:9px; table-layout: fixed; background: white;">
+    let html = `<table class="table table-bordered text-center" style="font-size:9px; table-layout: fixed; background: #f4f4f4; border-collapse: separate; border-spacing: 2px;">
                 <thead class="table-dark"><tr>`;
     
-    // Generar Encabezados
     estructuraMapa.forEach(col => {
-        html += `<th>${col.label}</th>`;
-        if (col.gap) html += `<th style="width:15px; background:#f0f0f0; border:none;"></th>`;
+        html += `<th style="width:120px">${col.label}</th>`;
+        if (col.gap) html += `<th style="width:40px; background:transparent; border:none;"></th>`; // Espacio más grande (calle)
     });
     html += `</tr></thead><tbody>`;
 
-    // Generar Filas
     for (let f = 0; f < maxFilas; f++) {
-        html += `<tr>`;
+        html += `<tr style="height: 50px;">`;
         
         estructuraMapa.forEach(col => {
             const conf = configCanopis[col.id];
             const totalEnCarril = Math.abs(conf.max - conf.min) + 1;
             
             if (f < totalEnCarril) {
-                // Calculamos el número actual. 
-                // Si min < max es ascendente, si min > max es descendente.
-                const paso = conf.max > conf.min ? 1 : -1;
-                const nroActual = conf.min + (f * paso);
+                // Lógica Inversa: f=0 traerá el valor de conf.max
+                const paso = conf.max > conf.min ? -1 : 1;
+                const nroActual = conf.max + (f * paso);
+                
                 const idCelda = `${conf.label}${nroActual}`;
                 const alias = aliasPosiciones[idCelda];
 
-                // Buscar bus en esta posición o alias
                 const bus = datosp60global.find(b => {
                     if (!b.localizacionVehiculo[0]) return false;
-                    const lat = parseFloat(b.localizacionVehiculo[0].latitud);
-                    const lon = parseFloat(b.localizacionVehiculo[0].longitud);
-                    const ubic = obtenerNomenclaturaCanopi(lat, lon);
-                    return ubic === idCelda || ubic === alias;
+                    const u = obtenerNomenclaturaCanopi(parseFloat(b.localizacionVehiculo[0].latitud), parseFloat(b.localizacionVehiculo[0].longitud));
+                    return u === idCelda || u === alias;
                 });
 
                 if (bus) {
                     const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
-                    html += `<td class="bg-success text-white" title="${idCelda}"><b>${cod}</b></td>`;
+                    const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
+                    const colorTiempo = tiempo.alerta ? "#e74c3c" : "#27ae60";
+
+                    html += `<td style="background: #ffffff; border: 2px solid #2ecc71; padding: 2px;">
+                                <div style="color: #7f8c8d; font-size: 8px;">${idCelda}</div>
+                                <div style="font-size: 11px; font-weight: bold; color: #2c3e50;">${cod}</div>
+                                <div style="color: ${colorTiempo}; font-weight: bold; font-size: 9px;">${tiempo.texto}</div>
+                             </td>`;
                 } else {
-                    // Mostrar alias si existe, sino el ID de posición
-                    html += `<td class="text-muted" style="background:#fafafa; font-size:8px;">${alias ? alias : idCelda}</td>`;
+                    html += `<td style="background: #ebebeb; color: #95a5a6; vertical-align: middle;">
+                                <div style="font-size: 8px;">${idCelda}</div>
+                                <div style="font-size: 7px; text-transform: uppercase;">${alias ? alias : 'Vacío'}</div>
+                             </td>`;
                 }
             } else {
-                // Celda vacía si el carril se acabó (ej. el D es más corto que el F)
-                html += `<td style="background:#eee; border:none;"></td>`;
+                html += `<td style="background: transparent; border: none;"></td>`;
             }
 
-            // Columna de separación física
-            if (col.gap) html += `<td style="background:#f0f0f0; border:none;"></td>`;
+            if (col.gap) html += `<td style="background: transparent; border: none;"></td>`;
         });
-        
         html += `</tr>`;
     }
 
     html += `</tbody></table>`;
     contenedor.innerHTML = html;
 }
+
 
 
 
