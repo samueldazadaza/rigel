@@ -10,8 +10,8 @@ const configCanopis = {
     "B_Occ": { p1: { lat: 4.700375, lon: -74.163375 }, pn: { lat: 4.701038, lon: -74.162702 }, min: 62, max: 32, label: "B" },
     "C_Ori": { p1: { lat: 4.700384, lon: -74.163653 }, pn: { lat: 4.701113, lon: -74.162872 }, min: 1, max: 36, label: "C" },
     "C_Occ": { p1: { lat: 4.700426, lon: -74.163848 }, pn: { lat: 4.701217, lon: -74.163023 }, min: 72, max: 37, label: "C" },
-    "D": { p1: { lat: 4.700425, lon: -74.164127 }, pn: { lat: 4.701169, lon: -74.163394 }, min: 1, max: 40, label: "D" }, // D1 hasta uf17-1 (aprox d37)
-    "E": { p1: { lat: 4.700527, lon: -74.164276 }, pn: { lat: 4.701267, lon: -74.163486 }, min: 1, max: 40, label: "E" }, // E1 hasta uf6-1
+    "D": { p1: { lat: 4.700425, lon: -74.164127 }, pn: { lat: 4.701169, lon: -74.163394 }, min: 1, max: 36, label: "D" }, // D1 hasta uf17-1 (aprox d37)
+    "E": { p1: { lat: 4.700527, lon: -74.164276 }, pn: { lat: 4.701267, lon: -74.163486 }, min: 1, max: 36, label: "E" }, // E1 hasta uf6-1
     "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 51, label: "F" },
     "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 52, label: "F" },
     "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
