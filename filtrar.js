@@ -41,6 +41,20 @@ const aliasPosiciones = {
     "E37": "UF6-1", "E38": "UF6-1"
 };
 
+const estructuraMapa = [
+    { label: "G", id: "G", gap: true },
+    { label: "F-OCC", id: "F_Occ", gap: false }, // Pegados
+    { label: "F-ORI", id: "F_Ori", gap: true },  // Espacio después del bloque
+    { label: "E", id: "E", gap: true },
+    { label: "D", id: "D", gap: true },
+    { label: "C-OCC", id: "C_Occ", gap: false },
+    { label: "C-ORI", id: "C_Ori", gap: true },
+    { label: "B-OCC", id: "B_Occ", gap: false },
+    { label: "B-ORI", id: "B_Ori", gap: true },
+    { label: "A-OCC", id: "A_Occ", gap: false },
+    { label: "A-ORI", id: "A_Ori", gap: false }
+];
+
 
 
 let datosp60global = [];
@@ -229,48 +243,69 @@ function procesarTextoPegado() {
 //funcion map
 function generarMapaVisual() {
     const contenedor = document.getElementById("mapa-patio");
-    const carriles = ["G", "F", "E", "D", "C", "B", "A"];
-    const maxPosiciones = 72; // El máximo de tus configCanopis
+    if (!contenedor) return;
 
-    let html = `<table class="table table-sm table-bordered text-center" style="font-size:10px; min-width:600px;">
-                <thead class="table-dark"><tr><th>#</th>`;
+    // Calculamos el máximo de filas necesarias comparando todos los carriles
+    const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
+
+    let html = `<table class="table table-sm table-bordered text-center" style="font-size:9px; table-layout: fixed; background: white;">
+                <thead class="table-dark"><tr>`;
     
-    carriles.forEach(c => html += `<th style="width:14%">Carril ${c}</th>`);
+    // Generar Encabezados
+    estructuraMapa.forEach(col => {
+        html += `<th>${col.label}</th>`;
+        if (col.gap) html += `<th style="width:15px; background:#f0f0f0; border:none;"></th>`;
+    });
     html += `</tr></thead><tbody>`;
 
-    for (let i = 1; i <= maxPosiciones; i++) {
-        html += `<tr><td class="table-secondary"><b>${i}</b></td>`;
+    // Generar Filas
+    for (let f = 0; f < maxFilas; f++) {
+        html += `<tr>`;
         
-        carriles.forEach(letra => {
-            // Buscamos si algún bus está en esta letra y número
-            const busEnPosicion = datosp60global.find(bus => {
-                if (!bus.localizacionVehiculo[0]) return false;
-                const lat = parseFloat(bus.localizacionVehiculo[0].latitud);
-                const lon = parseFloat(bus.localizacionVehiculo[0].longitud);
-                const ubic = obtenerNomenclaturaCanopi(lat, lon);
-                
-                // Si la ubicación coincide con la letra y número (ej: "D21") 
-                // o con el alias (ej: "PINT-UF17")
-                const idPosicionReal = `${letra}${i}`;
-                const nombreMostrar = aliasPosiciones[idPosicionReal] || idPosicionReal;
-                return ubic === nombreMostrar || ubic === idPosicionReal;
-            });
+        estructuraMapa.forEach(col => {
+            const conf = configCanopis[col.id];
+            const totalEnCarril = Math.abs(conf.max - conf.min) + 1;
+            
+            if (f < totalEnCarril) {
+                // Calculamos el número actual. 
+                // Si min < max es ascendente, si min > max es descendente.
+                const paso = conf.max > conf.min ? 1 : -1;
+                const nroActual = conf.min + (f * paso);
+                const idCelda = `${conf.label}${nroActual}`;
+                const alias = aliasPosiciones[idCelda];
 
-            if (busEnPosicion) {
-                const codBus = busEnPosicion.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
-                html += `<td class="bg-success text-white"><b>${codBus}</b></td>`;
+                // Buscar bus en esta posición o alias
+                const bus = datosp60global.find(b => {
+                    if (!b.localizacionVehiculo[0]) return false;
+                    const lat = parseFloat(b.localizacionVehiculo[0].latitud);
+                    const lon = parseFloat(b.localizacionVehiculo[0].longitud);
+                    const ubic = obtenerNomenclaturaCanopi(lat, lon);
+                    return ubic === idCelda || ubic === alias;
+                });
+
+                if (bus) {
+                    const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
+                    html += `<td class="bg-success text-white" title="${idCelda}"><b>${cod}</b></td>`;
+                } else {
+                    // Mostrar alias si existe, sino el ID de posición
+                    html += `<td class="text-muted" style="background:#fafafa; font-size:8px;">${alias ? alias : idCelda}</td>`;
+                }
             } else {
-                // Si la posición tiene un alias (como PINT-UF17), lo mostramos tenue
-                const alias = aliasPosiciones[`${letra}${i}`];
-                html += `<td class="text-muted" style="background:#f9f9f9">${alias ? alias : ''}</td>`;
+                // Celda vacía si el carril se acabó (ej. el D es más corto que el F)
+                html += `<td style="background:#eee; border:none;"></td>`;
             }
+
+            // Columna de separación física
+            if (col.gap) html += `<td style="background:#f0f0f0; border:none;"></td>`;
         });
+        
         html += `</tr>`;
     }
 
     html += `</tbody></table>`;
     contenedor.innerHTML = html;
 }
+
 
 
 // --- EJECUCIÓN ---
