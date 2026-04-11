@@ -241,22 +241,23 @@ function procesarTextoPegado() {
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
-//funcion map
+//funcion map logica
 function generarMapaVisual() {
     const contenedor = document.getElementById("mapa-patio");
     if (!contenedor) return;
 
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
 
-    // Estilos para celdas: sin padding, altura mínima, texto en una línea
-    const estiloCelda = `padding: 0px !important; margin: 0; white-space: nowrap; height: 18px; vertical-align: middle; line-height: 18px; overflow: hidden;`;
+    // Estilos base: padding 0 y gris oscuro para referencias
+    const estiloCelda = `padding: 0px !important; margin: 0; vertical-align: middle; overflow: hidden; border: 1px solid #dee2e6;`;
+    const colorGrisOscuro = "color: #555;"; // Gris más oscuro para posición y alias
 
     let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 1px; border-collapse: separate;">
                 <thead class="table-dark"><tr>`;
     
     estructuraMapa.forEach(col => {
-        html += `<th style="width:110px; padding: 2px 0;">${col.label}</th>`;
-        if (col.gap) html += `<th style="width:25px; background:transparent; border:none;"></th>`; 
+        html += `<th style="width:125px; padding: 2px 0;">${col.label}</th>`;
+        if (col.gap) html += `<th style="width:30px; background:transparent; border:none;"></th>`; 
     });
     html += `</tr></thead><tbody>`;
 
@@ -273,29 +274,40 @@ function generarMapaVisual() {
                 const idCelda = `${conf.label}${nroActual}`;
                 const alias = aliasPosiciones[idCelda];
 
-                const bus = datosp60global.find(b => {
+                // --- CAMBIO CLAVE: Buscamos TODOS los buses en esta posición ---
+                const busesEnPosicion = datosp60global.filter(b => {
                     if (!b.localizacionVehiculo[0]) return false;
                     const u = obtenerNomenclaturaCanopi(parseFloat(b.localizacionVehiculo[0].latitud), parseFloat(b.localizacionVehiculo[0].longitud));
                     return u === idCelda || u === alias;
                 });
 
-                if (bus) {
-                    const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
-                    const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
-                    const colorTiempo = tiempo.alerta ? "#ff0000" : "#008000";
+                if (busesEnPosicion.length > 0) {
+                    html += `<td style="${estiloCelda} background: #d4edda;">`;
+                    
+                    // Renderizamos cada bus encontrado
+                    busesEnPosicion.forEach(bus => {
+                        const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
+                        const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
+                        const colorTiempo = tiempo.alerta ? "#ff0000" : "#008000";
 
-                    html += `<td style="${estiloCelda} background: #d4edda; border: 1px solid #c3e6cb;">
-                                <div style="display: flex; justify-content: space-around; align-items: center; width: 100%;">
-                                    <span style="color: #666; width: 25px;">${idCelda}</span>
-                                    <span style="font-weight: bold; color: #000; flex-grow: 1;">${cod}</span>
-                                    <span style="color: ${colorTiempo}; font-weight: bold; width: 35px;">${tiempo.texto}</span>
-                                </div>
-                             </td>`;
+                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; padding: 1px 2px;">
+                                    <b style="color: #000; font-size: 10px;">${cod}</b>
+                                    <span style="color: ${colorTiempo}; font-weight: bold; font-size: 8px;">${tiempo.texto}</span>
+                                 </div>`;
+                    });
+
+                    // Pie de celda con Posición y Alias (Gris Oscuro)
+                    html += `<div style="${colorGrisOscuro} font-size: 7px; line-height: 8px; background: rgba(0,0,0,0.03);">
+                                ${idCelda}${alias ? ' - ' + alias : ''}
+                             </div>`;
+                    html += `</td>`;
+
                 } else {
-                    html += `<td style="${estiloCelda} background: #fdfdfd; color: #bbb;">
-                                <div style="display: flex; justify-content: flex-start; padding-left: 2px;">
-                                    <span>${idCelda}</span>
-                                    <span style="margin-left: 5px; font-size: 7px; opacity: 0.6;">${alias ? alias : ''}</span>
+                    // Celda Vacía: Mostramos posición y alias
+                    html += `<td style="${estiloCelda} background: #fdfdfd;">
+                                <div style="${colorGrisOscuro} font-size: 7px; padding: 2px 0;">
+                                    ${idCelda}
+                                    <div style="opacity: 0.7; font-size: 6px;">${alias ? alias : ''}</div>
                                 </div>
                              </td>`;
                 }
@@ -311,6 +323,7 @@ function generarMapaVisual() {
     html += `</tbody></table>`;
     contenedor.innerHTML = html;
 }
+
 
 
 
