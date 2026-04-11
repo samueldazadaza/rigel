@@ -26,7 +26,7 @@ const aliasPosiciones = {
     "D31": "UF17-4",
     "D33": "UF17-3",
     "D35": "UF17-2",
-    "D37": "UF17-1"
+    "D37": "UF17-1",
         
     "E21": "PINT-UF6",
     "E23": "CARC-UF6-2",
