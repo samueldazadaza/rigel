@@ -247,17 +247,17 @@ function generarMapaVisual() {
     if (!contenedor) return;
 
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
+    
+    // Estilos de ultra-compactación
+    const estiloCelda = `padding: 0px !important; margin: 0; vertical-align: top; border: 1px solid #ddd; height: auto;`;
+    const colorReferencia = "color: #444; font-weight: bold; font-size: 7px;"; // Gris oscuro para ID y Alias
 
-    // Estilos base: padding 0 y gris oscuro para referencias
-    const estiloCelda = `padding: 0px !important; margin: 0; vertical-align: middle; overflow: hidden; border: 1px solid #dee2e6;`;
-    const colorGrisOscuro = "color: #555;"; // Gris más oscuro para posición y alias
-
-    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 1px; border-collapse: separate;">
+    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 1px; border-collapse: separate; background: #fff;">
                 <thead class="table-dark"><tr>`;
     
     estructuraMapa.forEach(col => {
-        html += `<th style="width:125px; padding: 2px 0;">${col.label}</th>`;
-        if (col.gap) html += `<th style="width:30px; background:transparent; border:none;"></th>`; 
+        html += `<th style="width:135px; padding: 1px 0; font-size: 9px;">${col.label}</th>`;
+        if (col.gap) html += `<th style="width:25px; background:transparent; border:none;"></th>`; 
     });
     html += `</tr></thead><tbody>`;
 
@@ -274,40 +274,36 @@ function generarMapaVisual() {
                 const idCelda = `${conf.label}${nroActual}`;
                 const alias = aliasPosiciones[idCelda];
 
-                // --- CAMBIO CLAVE: Buscamos TODOS los buses en esta posición ---
-                const busesEnPosicion = datosp60global.filter(b => {
+                const buses = datosp60global.filter(b => {
                     if (!b.localizacionVehiculo[0]) return false;
                     const u = obtenerNomenclaturaCanopi(parseFloat(b.localizacionVehiculo[0].latitud), parseFloat(b.localizacionVehiculo[0].longitud));
                     return u === idCelda || u === alias;
                 });
 
-                if (busesEnPosicion.length > 0) {
+                if (buses.length > 0) {
                     html += `<td style="${estiloCelda} background: #d4edda;">`;
-                    
-                    // Renderizamos cada bus encontrado
-                    busesEnPosicion.forEach(bus => {
+                    buses.forEach(bus => {
                         const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
                         const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
-                        const colorTiempo = tiempo.alerta ? "#ff0000" : "#008000";
+                        const cTiempo = tiempo.alerta ? "#d32f2f" : "#2e7d32";
 
-                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; padding: 1px 2px;">
-                                    <b style="color: #000; font-size: 10px;">${cod}</b>
-                                    <span style="color: ${colorTiempo}; font-weight: bold; font-size: 8px;">${tiempo.texto}</span>
+                        // LINEA ÚNICA: Posición | Móvil | Tiempo
+                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; padding: 0 2px; height: 15px; line-height: 15px;">
+                                    <span style="${colorReferencia} width: 22px; text-align: left;">${idCelda}</span>
+                                    <span style="font-weight: 800; color: #000; font-size: 9px; flex-grow: 1;">${cod}</span>
+                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7px; width: 32px; text-align: right;">${tiempo.texto}</span>
                                  </div>`;
                     });
-
-                    // Pie de celda con Posición y Alias (Gris Oscuro)
-                    html += `<div style="${colorGrisOscuro} font-size: 7px; line-height: 8px; background: rgba(0,0,0,0.03);">
-                                ${idCelda}${alias ? ' - ' + alias : ''}
-                             </div>`;
+                    // Pequeño Alias abajo si existe (casi imperceptible)
+                    if (alias) html += `<div style="font-size: 6px; color: #555; line-height: 7px; text-align: left; padding-left: 2px; opacity: 0.8;">${alias}</div>`;
                     html += `</td>`;
 
                 } else {
-                    // Celda Vacía: Mostramos posición y alias
-                    html += `<td style="${estiloCelda} background: #fdfdfd;">
-                                <div style="${colorGrisOscuro} font-size: 7px; padding: 2px 0;">
-                                    ${idCelda}
-                                    <div style="opacity: 0.7; font-size: 6px;">${alias ? alias : ''}</div>
+                    // Celda Vacía en una sola línea
+                    html += `<td style="${estiloCelda} background: #fafafa; height: 15px; line-height: 15px;">
+                                <div style="display: flex; padding: 0 2px;">
+                                    <span style="${colorReferencia}">${idCelda}</span>
+                                    <span style="margin-left: 4px; font-size: 6px; color: #888; overflow: hidden; text-overflow: ellipsis;">${alias ? alias : ''}</span>
                                 </div>
                              </td>`;
                 }
