@@ -248,27 +248,28 @@ function generarMapaVisual() {
 
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
 
-    let html = `<table class="table table-bordered text-center" style="font-size:9px; table-layout: fixed; background: #f4f4f4; border-collapse: separate; border-spacing: 2px;">
+    // Estilos para celdas: sin padding, altura mínima, texto en una línea
+    const estiloCelda = `padding: 0px !important; margin: 0; white-space: nowrap; height: 18px; vertical-align: middle; line-height: 18px; overflow: hidden;`;
+
+    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 1px; border-collapse: separate;">
                 <thead class="table-dark"><tr>`;
     
     estructuraMapa.forEach(col => {
-        html += `<th style="width:120px">${col.label}</th>`;
-        if (col.gap) html += `<th style="width:40px; background:transparent; border:none;"></th>`; // Espacio más grande (calle)
+        html += `<th style="width:110px; padding: 2px 0;">${col.label}</th>`;
+        if (col.gap) html += `<th style="width:25px; background:transparent; border:none;"></th>`; 
     });
     html += `</tr></thead><tbody>`;
 
     for (let f = 0; f < maxFilas; f++) {
-        html += `<tr style="height: 50px;">`;
+        html += `<tr>`;
         
         estructuraMapa.forEach(col => {
             const conf = configCanopis[col.id];
             const totalEnCarril = Math.abs(conf.max - conf.min) + 1;
             
             if (f < totalEnCarril) {
-                // Lógica Inversa: f=0 traerá el valor de conf.max
                 const paso = conf.max > conf.min ? -1 : 1;
                 const nroActual = conf.max + (f * paso);
-                
                 const idCelda = `${conf.label}${nroActual}`;
                 const alias = aliasPosiciones[idCelda];
 
@@ -281,17 +282,21 @@ function generarMapaVisual() {
                 if (bus) {
                     const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
                     const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
-                    const colorTiempo = tiempo.alerta ? "#e74c3c" : "#27ae60";
+                    const colorTiempo = tiempo.alerta ? "#ff0000" : "#008000";
 
-                    html += `<td style="background: #ffffff; border: 2px solid #2ecc71; padding: 2px;">
-                                <div style="color: #7f8c8d; font-size: 8px;">${idCelda}</div>
-                                <div style="font-size: 11px; font-weight: bold; color: #2c3e50;">${cod}</div>
-                                <div style="color: ${colorTiempo}; font-weight: bold; font-size: 9px;">${tiempo.texto}</div>
+                    html += `<td style="${estiloCelda} background: #d4edda; border: 1px solid #c3e6cb;">
+                                <div style="display: flex; justify-content: space-around; align-items: center; width: 100%;">
+                                    <span style="color: #666; width: 25px;">${idCelda}</span>
+                                    <span style="font-weight: bold; color: #000; flex-grow: 1;">${cod}</span>
+                                    <span style="color: ${colorTiempo}; font-weight: bold; width: 35px;">${tiempo.texto}</span>
+                                </div>
                              </td>`;
                 } else {
-                    html += `<td style="background: #ebebeb; color: #95a5a6; vertical-align: middle;">
-                                <div style="font-size: 8px;">${idCelda}</div>
-                                <div style="font-size: 7px; text-transform: uppercase;">${alias ? alias : 'Vacío'}</div>
+                    html += `<td style="${estiloCelda} background: #fdfdfd; color: #bbb;">
+                                <div style="display: flex; justify-content: flex-start; padding-left: 2px;">
+                                    <span>${idCelda}</span>
+                                    <span style="margin-left: 5px; font-size: 7px; opacity: 0.6;">${alias ? alias : ''}</span>
+                                </div>
                              </td>`;
                 }
             } else {
