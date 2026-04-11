@@ -18,15 +18,25 @@ const configCanopis = {
 };
 
 const aliasPosiciones = {
-    "D21": "Pintura",
-    "D23": "Cárcamo 2",
-    "D25": "Cárcamo 1",
-    "D27": "uf17-6",
-    "D29": "uf17-5",
-    "D31": "uf17-4",
-    "D33": "uf17-3",
-    "D35": "uf17-2",
-    "D37": "uf17-1"
+    "D21": "PINT-UF17",
+    "D23": "CARC-UF17-2",
+    "D25": "CARC-UF17-1",
+    "D27": "UF17-6",
+    "D29": "UF17-5",
+    "D31": "UF17-4",
+    "D33": "UF17-3",
+    "D35": "UF17-2",
+    "D37": "UF17-1"
+        
+    "E21": "PINT-UF6",
+    "E23": "CARC-UF6-2",
+    "E25": "CARC-UF6-1",
+    "E27": "UF6-6",
+    "E29": "UF6-5",
+    "E31": "UF6-4",
+    "E33": "UF6-3",
+    "E35": "UF6-2",
+    "E37": "UF6-1"
 };
 
 
