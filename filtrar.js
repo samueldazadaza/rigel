@@ -18,26 +18,29 @@ const configCanopis = {
 };
 
 const aliasPosiciones = {
-    "D21": "PINT-UF17",
-    "D23": "CARC-UF17-2",
-    "D25": "CARC-UF17-1",
-    "D27": "UF17-6",
-    "D29": "UF17-5",
-    "D31": "UF17-4",
-    "D33": "UF17-3",
-    "D35": "UF17-2",
-    "D37": "UF17-1",
-        
-    "E21": "PINT-UF6",
-    "E23": "CARC-UF6-2",
-    "E25": "CARC-UF6-1",
-    "E27": "UF6-6",
-    "E29": "UF6-5",
-    "E31": "UF6-4",
-    "E33": "UF6-3",
-    "E35": "UF6-2",
-    "E37": "UF6-1"
+    // --- AREA UF17 (CARRIL D) ---
+    "D21": "PINT-UF17", "D22": "PINT-UF17",
+    "D23": "CARC-UF17-2", "D24": "CARC-UF17-2",
+    "D25": "CARC-UF17-1", "D26": "CARC-UF17-1",
+    "D27": "UF17-6", "D28": "UF17-6",
+    "D29": "UF17-5", "D30": "UF17-5",
+    "D31": "UF17-4", "D32": "UF17-4",
+    "D33": "UF17-3", "D34": "UF17-3",
+    "D35": "UF17-2", "D36": "UF17-2",
+    "D37": "UF17-1", "D38": "UF17-1",
+
+    // --- AREA UF6 (CARRIL E) ---
+    "E21": "PINT-UF6", "E22": "PINT-UF6",
+    "E23": "CARC-UF6-2", "E24": "CARC-UF6-2",
+    "E25": "CARC-UF6-1", "E26": "CARC-UF6-1",
+    "E27": "UF6-6", "E28": "UF6-6",
+    "E29": "UF6-5", "E30": "UF6-5",
+    "E31": "UF6-4", "E32": "UF6-4",
+    "E33": "UF6-3", "E34": "UF6-3",
+    "E35": "UF6-2", "E36": "UF6-2",
+    "E37": "UF6-1", "E38": "UF6-1"
 };
+
 
 
 let datosp60global = [];
