@@ -226,6 +226,53 @@ function procesarTextoPegado() {
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
 }
 
+//funcion map
+function generarMapaVisual() {
+    const contenedor = document.getElementById("mapa-patio");
+    const carriles = ["G", "F", "E", "D", "C", "B", "A"];
+    const maxPosiciones = 72; // El máximo de tus configCanopis
+
+    let html = `<table class="table table-sm table-bordered text-center" style="font-size:10px; min-width:600px;">
+                <thead class="table-dark"><tr><th>#</th>`;
+    
+    carriles.forEach(c => html += `<th style="width:14%">Carril ${c}</th>`);
+    html += `</tr></thead><tbody>`;
+
+    for (let i = 1; i <= maxPosiciones; i++) {
+        html += `<tr><td class="table-secondary"><b>${i}</b></td>`;
+        
+        carriles.forEach(letra => {
+            // Buscamos si algún bus está en esta letra y número
+            const busEnPosicion = datosp60global.find(bus => {
+                if (!bus.localizacionVehiculo[0]) return false;
+                const lat = parseFloat(bus.localizacionVehiculo[0].latitud);
+                const lon = parseFloat(bus.localizacionVehiculo[0].longitud);
+                const ubic = obtenerNomenclaturaCanopi(lat, lon);
+                
+                // Si la ubicación coincide con la letra y número (ej: "D21") 
+                // o con el alias (ej: "PINT-UF17")
+                const idPosicionReal = `${letra}${i}`;
+                const nombreMostrar = aliasPosiciones[idPosicionReal] || idPosicionReal;
+                return ubic === nombreMostrar || ubic === idPosicionReal;
+            });
+
+            if (busEnPosicion) {
+                const codBus = busEnPosicion.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
+                html += `<td class="bg-success text-white"><b>${codBus}</b></td>`;
+            } else {
+                // Si la posición tiene un alias (como PINT-UF17), lo mostramos tenue
+                const alias = aliasPosiciones[`${letra}${i}`];
+                html += `<td class="text-muted" style="background:#f9f9f9">${alias ? alias : ''}</td>`;
+            }
+        });
+        html += `</tr>`;
+    }
+
+    html += `</tbody></table>`;
+    contenedor.innerHTML = html;
+}
+
+
 // --- EJECUCIÓN ---
 async function ejecutar() {
     try {
@@ -266,6 +313,8 @@ async function ejecutar() {
             });
         }
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
+
+        //pintar map
     } catch (e) { console.error(e); }
 }
 
