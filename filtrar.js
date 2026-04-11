@@ -315,6 +315,7 @@ async function ejecutar() {
         document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
 
         //pintar map
+        generarMapaVisual(); 
     } catch (e) { console.error(e); }
 }
 
