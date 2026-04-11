@@ -250,7 +250,7 @@ async function ejecutar() {
                 <td>${item.days_off ?? '-'}</td>
                 <td>${item.current_status || '-'}</td>
                 <td>${v?.idRuta || '-'}</td>
-                <td style="font-size: 11px;"><b style="color:${colorUbic}">${ubic}</b> | ${dist}km</td>
+                <td style="font-size: 11px;"><b style="color:${colorUbic}">${ubic}</b> | ${dist}km |<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         }).join('');
 
