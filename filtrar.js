@@ -248,16 +248,16 @@ function generarMapaVisual() {
 
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
     
-    // Estilos de ultra-compactación
-    const estiloCelda = `padding: 0px !important; margin: 0; vertical-align: top; border: 1px solid #ddd; height: auto;`;
-    const colorReferencia = "color: #444; font-weight: bold; font-size: 7px;"; // Gris oscuro para ID y Alias
+    // Estilos base
+    const estiloCeldaBase = `padding: 0px !important; margin: 0; vertical-align: top; height: auto; transition: all 0.2s;`;
+    const colorReferencia = "color: #333; font-weight: bold; font-size: 7.5px;"; 
 
-    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 1px; border-collapse: separate; background: #fff;">
+    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 2px; border-collapse: separate; background: #fff;">
                 <thead class="table-dark"><tr>`;
     
     estructuraMapa.forEach(col => {
-        html += `<th style="width:135px; padding: 1px 0; font-size: 9px;">${col.label}</th>`;
-        if (col.gap) html += `<th style="width:25px; background:transparent; border:none;"></th>`; 
+        html += `<th style="width:140px; padding: 2px 0; font-size: 9px;">${col.label}</th>`;
+        if (col.gap) html += `<th style="width:30px; background:transparent; border:none;"></th>`; 
     });
     html += `</tr></thead><tbody>`;
 
@@ -273,52 +273,74 @@ function generarMapaVisual() {
                 const nroActual = conf.max + (f * paso);
                 const idCelda = `${conf.label}${nroActual}`;
                 const alias = aliasPosiciones[idCelda];
+                const tieneAlias = alias !== undefined && alias !== "";
 
-                const buses = datosp60global.filter(b => {
+                const busesEnPosicion = datosp60global.filter(b => {
                     if (!b.localizacionVehiculo[0]) return false;
                     const u = obtenerNomenclaturaCanopi(parseFloat(b.localizacionVehiculo[0].latitud), parseFloat(b.localizacionVehiculo[0].longitud));
                     return u === idCelda || u === alias;
                 });
 
-                if (buses.length > 0) {
-                    html += `<td style="${estiloCelda} background: #d4edda;">`;
-                    buses.forEach(bus => {
+                // --- LÓGICA DE ESTILO DINÁMICO (BORDE AZUL SI TIENE ALIAS) ---
+                let estiloDinamico = estiloCeldaBase;
+                if (tieneAlias) {
+                    estiloDinamico += "border: 2px solid #007bff !important; "; // Borde azul grueso
+                } else {
+                    estiloDinamico += "border: 1px solid #ddd; "; // Borde normal
+                }
+
+                // Color de fondo: Verde si hay bus, Azul clarito si es Alias vacío, Blanco si es normal
+                let colorFondo = "#ffffff";
+                if (busesEnPosicion.length > 0) {
+                    colorFondo = "#d4edda";
+                } else if (tieneAlias) {
+                    colorFondo = "#eef7ff"; 
+                }
+
+                html += `<td style="${estiloDinamico} background: ${colorFondo};">`;
+
+                if (busesEnPosicion.length > 0) {
+                    busesEnPosicion.forEach(bus => {
                         const cod = bus.idVehiculo.replace(/^(.{3})(\d{4})$/, '$1-$2');
                         const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
                         const cTiempo = tiempo.alerta ? "#d32f2f" : "#2e7d32";
 
-                        // LINEA ÚNICA: Posición | Móvil | Tiempo
-                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; padding: 0 2px; height: 15px; line-height: 15px;">
-                                    <span style="${colorReferencia} width: 22px; text-align: left;">${idCelda}</span>
-                                    <span style="font-weight: 800; color: #000; font-size: 9px; flex-grow: 1;">${cod}</span>
-                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7px; width: 32px; text-align: right;">${tiempo.texto}</span>
+                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 2px; height: 16px;">
+                                    <span style="${colorReferencia} width: 25px; text-align: left;">${idCelda}</span>
+                                    <span style="font-weight: 800; color: #000; font-size: 9.5px; flex-grow: 1;">${cod}</span>
+                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7.5px; width: 35px; text-align: right;">${tiempo.texto}</span>
                                  </div>`;
                     });
-                    // Pequeño Alias abajo si existe (casi imperceptible)
-                    if (alias) html += `<div style="font-size: 6px; color: #555; line-height: 7px; text-align: left; padding-left: 2px; opacity: 0.8;">${alias}</div>`;
-                    html += `</td>`;
-
                 } else {
-                    // Celda Vacía en una sola línea
-                    html += `<td style="${estiloCelda} background: #fafafa; height: 15px; line-height: 15px;">
-                                <div style="display: flex; padding: 0 2px;">
-                                    <span style="${colorReferencia}">${idCelda}</span>
-                                    <span style="margin-left: 4px; font-size: 6px; color: #888; overflow: hidden; text-overflow: ellipsis;">${alias ? alias : ''}</span>
-                                </div>
-                             </td>`;
+                    // Celda Vacía
+                    html += `<div style="display: flex; padding: 0 2px; align-items: center; height: 16px;">
+                                <span style="${colorReferencia} width: 25px; text-align: left;">${idCelda}</span>
+                                <span style="margin-left: 5px; font-size: 7px; color: #0056b3; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    ${alias ? alias : ''}
+                                </span>
+                             </div>`;
                 }
+
+                // Etiqueta minúscula de alias si hay buses parqueados
+                if (tieneAlias && busesEnPosicion.length > 0) {
+                    html += `<div style="font-size: 6px; color: #0056b3; font-weight: bold; line-height: 8px; text-align: left; padding-left: 2px;">${alias}</div>`;
+                }
+
+                html += `</td>`;
             } else {
                 html += `<td style="background: transparent; border: none;"></td>`;
             }
 
             if (col.gap) html += `<td style="background: transparent; border: none;"></td>`;
         });
+        
         html += `</tr>`;
     }
 
     html += `</tbody></table>`;
     contenedor.innerHTML = html;
 }
+
 
 
 
