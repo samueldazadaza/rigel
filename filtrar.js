@@ -248,15 +248,16 @@ function generarMapaVisual() {
 
     const maxFilas = Math.max(...Object.values(configCanopis).map(c => Math.abs(c.max - c.min) + 1));
     
-    // Estilos base
-    const estiloCeldaBase = `padding: 0px !important; margin: 0; vertical-align: top; height: auto; transition: all 0.2s;`;
-    const colorReferencia = "color: #333; font-weight: bold; font-size: 7.5px;"; 
+    // Estilo base: sin saltos de línea y transición suave
+    const estiloCeldaBase = `padding: 0px !important; margin: 0; vertical-align: top; height: auto; white-space: nowrap; transition: all 0.2s;`;
+    const colorReferencia = "color: #444; font-weight: bold; font-size: 7.5px;"; 
 
-    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 2px; border-collapse: separate; background: #fff;">
+    // Aumentamos ligeramente el width de las columnas y el espaciado (border-spacing)
+    let html = `<table class="table table-bordered text-center" style="font-size:8px; table-layout: fixed; width: auto; border-spacing: 3px; border-collapse: separate; background: #fdfdfd;">
                 <thead class="table-dark"><tr>`;
     
     estructuraMapa.forEach(col => {
-        html += `<th style="width:140px; padding: 2px 0; font-size: 9px;">${col.label}</th>`;
+        html += `<th style="width:145px; padding: 2px 0; font-size: 9px; vertical-align: middle;">${col.label}</th>`;
         if (col.gap) html += `<th style="width:30px; background:transparent; border:none;"></th>`; 
     });
     html += `</tr></thead><tbody>`;
@@ -281,21 +282,17 @@ function generarMapaVisual() {
                     return u === idCelda || u === alias;
                 });
 
-                // --- LÓGICA DE ESTILO DINÁMICO (BORDE AZUL SI TIENE ALIAS) ---
+                // --- NUEVA LÓGICA DE ESTILO SUTIL (GRIS PIZARRA) ---
                 let estiloDinamico = estiloCeldaBase;
                 if (tieneAlias) {
-                    estiloDinamico += "border: 2px solid #007bff !important; "; // Borde azul grueso
+                    // Borde Gris Pizarra más grueso para resaltar sutilmente
+                    estiloDinamico += "border: 2px solid #607d8b !important; "; 
                 } else {
-                    estiloDinamico += "border: 1px solid #ddd; "; // Borde normal
+                    estiloDinamico += "border: 1px solid #dee2e6; "; // Gris suave estándar Bootstrap
                 }
 
-                // Color de fondo: Verde si hay bus, Azul clarito si es Alias vacío, Blanco si es normal
-                let colorFondo = "#ffffff";
-                if (busesEnPosicion.length > 0) {
-                    colorFondo = "#d4edda";
-                } else if (tieneAlias) {
-                    colorFondo = "#eef7ff"; 
-                }
+                // Color de fondo sutil: Verde claro si hay bus, Blanco si no
+                let colorFondo = busesEnPosicion.length > 0 ? "#d4edda" : "#ffffff";
 
                 html += `<td style="${estiloDinamico} background: ${colorFondo};">`;
 
@@ -305,17 +302,17 @@ function generarMapaVisual() {
                         const tiempo = calcularHaceCuanto(bus.fechaHoraLecturaDato);
                         const cTiempo = tiempo.alerta ? "#d32f2f" : "#2e7d32";
 
-                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 2px; height: 16px;">
-                                    <span style="${colorReferencia} width: 25px; text-align: left;">${idCelda}</span>
-                                    <span style="font-weight: 800; color: #000; font-size: 9.5px; flex-grow: 1;">${cod}</span>
-                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7.5px; width: 35px; text-align: right;">${tiempo.texto}</span>
+                        html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.03); padding: 0 2px; height: 16px; overflow: hidden;">
+                                    <span style="${colorReferencia} min-width: 25px; text-align: left;">${idCelda}</span>
+                                    <span style="font-weight: 800; color: #000; font-size: 9.5px; margin: 0 3px;">${cod}</span>
+                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7.5px; min-width: 35px; text-align: right;">${tiempo.texto}</span>
                                  </div>`;
                     });
                 } else {
                     // Celda Vacía
-                    html += `<div style="display: flex; padding: 0 2px; align-items: center; height: 16px;">
-                                <span style="${colorReferencia} width: 25px; text-align: left;">${idCelda}</span>
-                                <span style="margin-left: 5px; font-size: 7px; color: #0056b3; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                    html += `<div style="display: flex; padding: 0 2px; align-items: center; height: 16px; overflow: hidden;">
+                                <span style="${colorReferencia} min-width: 25px; text-align: left;">${idCelda}</span>
+                                <span style="margin-left: 5px; font-size: 7px; color: #607d8b; font-weight: bold;">
                                     ${alias ? alias : ''}
                                 </span>
                              </div>`;
@@ -323,7 +320,7 @@ function generarMapaVisual() {
 
                 // Etiqueta minúscula de alias si hay buses parqueados
                 if (tieneAlias && busesEnPosicion.length > 0) {
-                    html += `<div style="font-size: 6px; color: #0056b3; font-weight: bold; line-height: 8px; text-align: left; padding-left: 2px;">${alias}</div>`;
+                    html += `<div style="font-size: 6px; color: #607d8b; font-weight: bold; line-height: 8px; text-align: left; padding-left: 2px; overflow: hidden;">${alias}</div>`;
                 }
 
                 html += `</td>`;
