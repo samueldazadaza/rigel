@@ -14,7 +14,7 @@ const configCanopis = {
     "E": { p1: { lat: 4.700527, lon: -74.164276 }, pn: { lat: 4.701267, lon: -74.163486 }, min: 1, max: 36, label: "E" }, // E1 hasta uf6-1
     "F_Ori": { p1: { lat: 4.700426, lon: -74.164711 }, pn: { lat: 4.701502, lon: -74.163587 }, min: 1, max: 51, label: "F" },
     "F_Occ": { p1: { lat: 4.700467, lon: -74.164874 }, pn: { lat: 4.701630, lon: -74.163667 }, min: 106, max: 52, label: "F" },
-    "G": { p1: { lat: 4.700429, lon: -74.165231 }, pn: { lat: 4.701859, lon: -74.163711 }, min: 1, max: 63, label: "G" }
+    "G": { p1: { lat: 4.700382, lon: -74.165165 }, pn: { lat: 4.701766, lon: -74.163669 }, min: 1, max: 63, label: "G" }
 };
 
 const aliasPosiciones = {
