@@ -102,7 +102,7 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
         if (dist < minDistanceDegrees) { minDistanceDegrees = dist; mejorClave = id; }
     }
     
-    if (minDistanceDegrees > 0.00045) return "EN RUTA";
+    if (minDistanceDegrees > 0.00045) return "RUTA";
     
     const c = configCanopis[mejorClave];
     let progreso = ((lonV - c.p1.lon) * (c.pn.lon - c.p1.lon) + (latV - c.p1.lat) * (c.pn.lat - c.p1.lat)) / 
