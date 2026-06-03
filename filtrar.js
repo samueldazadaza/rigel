@@ -222,7 +222,7 @@ function procesarTextoPegado() {
             const envio = v.fechaHoraEnvioDato || '-';
             const tiempoObj = calcularHaceCuanto(v.fechaHoraLecturaDato);
 
-            const colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+            const colorUbic = (ubic === "RUTA") ? "#27ae60" : "#d35400";
             const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50";
             
             tabla += `<tr>
@@ -359,7 +359,7 @@ async function ejecutar() {
                 lon = parseFloat(v.localizacionVehiculo[0].longitud);
                 ubic = obtenerNomenclaturaCanopi(lat, lon);
                 dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
-                colorUbic = (ubic === "EN RUTA") ? "#27ae60" : "#d35400";
+                colorUbic = (ubic === "RUTA") ? "#27ae60" : "#d35400";
             }
             return `<tr>
                 <td>${i+1}</td>
