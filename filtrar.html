@@ -57,7 +57,6 @@
       <a class="nav-item nav-link" href="./extrae-txt.html">Extrae-txt</a>
       <a class="nav-item nav-link active" href="./filtrar.html">Filtrar</a>
     </nav>
-
       <div class="container-lg mt-4">
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="checkActivar" enabled>
@@ -65,73 +64,71 @@
         </div>
       </div>
 
-      <div id="contenedor-entrada" class="mt-3 container-lg" style="display: block;">
+      <div id="contenedor-entrada" class="container-lg mt-3" style="display: block;">
         <textarea id="campo-texto" class="form-control" rows="3" placeholder="Pega aquí los id de movil separados por línea (Ej: Z67-4034)"></textarea>
         <div id="resultado-busqueda" class="mt-2 p-3 border rounded bg-light">
           <span class="text-muted italic">Resultados de búsqueda...</span>
         </div>
       </div>
 
-    
-    
-    <div class="container-lg">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Sistema</th>
-            <th>Vehículo</th>
-            <th>Descripción</th>
-            <th>Fecha</th>
-            <th>Días Fuera</th>
-            <th>Estado</th>
-            <th>Ruta</th>
-            <th>Time/Map</th>
-          </tr>
-          <tr class="tr-filtros">
-            <th></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-            <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
-          </tr>
-        </thead>
-        <tbody id="tablaEnriquecida">
-          </tbody>
-      </table>
-
-
-
-<div class="mt-4">
-    <h5>Loading...</h5>
-    <div id="mapa-patio" class="table-responsive">
+      <div class="container-lg mt-3" style="overflow: hidden;">
+        <div id="mapa-scrollbar-top" style="overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: -1px;">
+          <div id="mapa-scroll-track" style="height: 1px;"></div>
         </div>
-</div>
-      
-      
-      
-      <div id="loader" class="text-center mt-5">
+        <div id="mapa-patio" class="table-responsive" style="overflow-x: auto;"></div>
+      </div>
+
+      <div class="container-lg mt-4">
+        <div class="row">
+          <div class="col-12">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Sistema</th>
+                  <th>Vehículo</th>
+                  <th>Descripción</th>
+                  <th>Fecha</th>
+                  <th>Días Fuera</th>
+                  <th>Estado</th>
+                  <th>Ruta</th>
+                  <th>Time/Map</th>
+                </tr>
+                <tr class="tr-filtros">
+                  <th></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                  <th><input type="text" class="input-filtro" placeholder="Filtrar..." onkeyup="filtrarColumnas()"></th>
+                </tr>
+              </thead>
+              <tbody id="tablaEnriquecida">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="loader" class="text-center mt-5 container-lg">
         <div class="spinner-border text-primary" role="status"></div>
         <p>Cargando datos...</p>
       </div>
 
-      
-    </div>
-
     <script src="filtrar.js"></script>
 
     <script>
-      /**
-       * Función de filtrado multidireccional de la tabla
-       */
       function filtrarColumnas() {
         const tabla = document.getElementById("tablaEnriquecida");
         const filas = tabla.getElementsByTagName("tr");
         const inputs = document.querySelectorAll(".input-filtro");
+
+        inputs.forEach((input, index) => {
+          localStorage.setItem(`filtro-enr-${index}`, input.value);
+        });
 
         for (let i = 0; i < filas.length; i++) {
           let coincidenTodos = true;
@@ -151,6 +148,15 @@
 
           filas[i].style.display = coincidenTodos ? "" : "none";
         }
+      }
+
+      function restaurarFiltros() {
+        const inputs = document.querySelectorAll(".input-filtro");
+        inputs.forEach((input, index) => {
+          const saved = localStorage.getItem(`filtro-enr-${index}`);
+          if (saved) input.value = saved;
+        });
+        if (inputs.length) filtrarColumnas();
       }
     </script>
   </body>
