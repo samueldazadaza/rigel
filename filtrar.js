@@ -60,9 +60,14 @@ const estructuraMapa = [
 
 let datosp60global = [];
 let idsBuscados = new Set();
+let datosListos = false;
 
 function normalizarIdVehiculo(id) {
     return (id || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function escapeHTML(str) {
+    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function colorPorRuta(ruta) {
@@ -73,9 +78,39 @@ function colorPorRuta(ruta) {
     return `hsl(${Math.abs(hash % 360)}, 45%, 82%)`;
 }
 
+function colorRutaResultado(ruta) {
+    if (!ruta || ruta === '-') return '#000';
+    if (ruta.charAt(0).toUpperCase() === 'K') return '#27ae60';
+    if (/\d$/.test(ruta)) return '#007bff';
+    if (ruta.length > 4) return '#e74c3c';
+    return '#000';
+}
+
+function colorIdBus(id) {
+    const norm = (id || '').toUpperCase();
+    if (norm.startsWith('Z63')) return '#00008B';
+    if (norm.startsWith('Z67')) return '#8B0000';
+    return '#000';
+}
+
 function estiloRutaHtml(ruta) {
     if (!ruta || ruta === '-') return '-';
     return `<span style="background:${colorPorRuta(ruta)}; border-radius:2px; padding:1px 4px;">${ruta}</span>`;
+}
+
+function formatearTiempoPatio(minutos) {
+    if (minutos === null || minutos === undefined || isNaN(minutos)) return '-';
+    const total = Math.round(minutos);
+    if (total >= 1440) {
+        const d = Math.floor(total / 1440);
+        const h = Math.floor((total % 1440) / 60);
+        return h > 0 ? `${d}d ${h}h` : `${d}d`;
+    }
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}min`;
+    if (h > 0) return `${h}h`;
+    return `${m}min`;
 }
 
 // --- UTILIDADES GEOGRÁFICAS Y TIEMPO ---
@@ -101,10 +136,7 @@ function calcularHaceCuanto(fechaStr) {
         if (difSeg < 60) return { texto: `${difSeg} seg`, alerta: false };
         const difMin = Math.floor(difSeg / 60);
         const alerta = difMin >= 5;
-
-        if (difMin < 60) return { texto: `${difMin} min`, alerta: alerta };
-        const difHoras = Math.floor(difMin / 60);
-        return { texto: `${difHoras} h`, alerta: true };
+        return { texto: formatearTiempoPatio(difMin), alerta: alerta };
     } catch (e) { return { texto: "Error", alerta: true }; }
 }
 
@@ -206,9 +238,16 @@ function procesarTextoPegado() {
     idsBuscados.clear();
 
     if (!textarea.value.trim()) {
-        resultadoDiv.innerHTML = "Esperando datos...";
+        resultadoDiv.innerHTML = datosListos ? "Esperando datos..." : "<span class='text-muted'>Los datos se están cargando...</span>";
         localStorage.removeItem('campoTextoValue');
         generarMapaVisual();
+        return;
+    }
+
+    localStorage.setItem('campoTextoValue', textarea.value);
+
+    if (!datosListos) {
+        resultadoDiv.innerHTML = "<div class='text-muted'>Los datos se están cargando...</div>";
         return;
     }
 
@@ -253,24 +292,23 @@ function procesarTextoPegado() {
 
             const colorUbic = (ubic === "RUTA") ? "#27ae60" : "#d35400";
             const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50";
-            const tiempoPatio = (ubic === "RUTA") ? `${Math.round(parseFloat(dist) * 4)} min` : "En patio";
+            const tiempoPatio = (ubic === "RUTA") ? formatearTiempoPatio(Math.round(parseFloat(dist) * 4)) : "En patio";
 
             tabla += `<tr>
-                <td><b>${cod}</b></td>
+                <td><b style="color:${colorIdBus(cod)};">${escapeHTML(cod)}</b></td>
                 <td style="color:${colorUbic}"><b>${ubic}</b></td>
-                <td>${v.idRuta || '-'}</td>
+                <td style="color:${colorRutaResultado(v.idRuta)}; font-weight:bold;">${v.idRuta || '-'}</td>
                 <td style="font-size: 10px;">${envio}</td>
                 <td style="color:${colorHace}; font-weight: bold;">${tiempoObj.texto}</td>
                 <td>${dist}</td>
-                <td style="font-weight:bold;">${tiempoPatio}</td>
+                <td style="font-weight:bold; ${tiempoPatio === "En patio" ? "color:#27ae60;" : ""}">${tiempoPatio}</td>
                 <td class="text-center"><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">📍</a></td>
             </tr>`;
         } else {
-            tabla += `<tr><td>${cod}</td><td colspan="7" class="text-muted text-center">Sin reporte GPS</td></tr>`;
+            tabla += `<tr><td>${escapeHTML(cod)}</td><td colspan="7" class="text-muted text-center">Sin reporte GPS</td></tr>`;
         }
     });
     resultadoDiv.innerHTML = tabla + "</tbody></table>";
-    localStorage.setItem('campoTextoValue', textarea.value);
     generarMapaVisual();
 }
 
@@ -336,11 +374,12 @@ function generarMapaVisual() {
                         const cTiempo = tiempo.alerta ? "#d32f2f" : "#2e7d32";
                         const estaBuscado = idsBuscados.has(normalizarIdVehiculo(bus.idVehiculo));
                         const fondoBus = estaBuscado ? 'background: #ffcdd2; border-radius: 2px;' : '';
+                        const rutaTxt = (bus.idRuta && bus.idRuta !== '-') ? `<span style="color: ${colorRutaResultado(bus.idRuta)}; font-size: 7.5px; font-weight: bold; margin-left: 3px;">${bus.idRuta.slice(0, 5)}</span>` : '';
 
                         html += `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.03); padding: 0 2px; height: 16px; overflow: hidden; ${fondoBus}">
                                     <span style="${colorReferencia} min-width: 25px; text-align: left;">${idCelda}</span>
-                                    <span style="font-weight: 800; color: #000; font-size: 9.5px; margin: 0 3px;">${cod}</span>
-                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7.5px; min-width: 35px; text-align: right;">${tiempo.texto}</span>
+                                    <span style="font-weight: 800; color: ${colorIdBus(cod)}; font-size: 9.5px; margin: 0 3px; white-space: nowrap;">${cod}${rutaTxt}</span>
+                                    <span style="color: ${cTiempo}; font-weight: bold; font-size: 7.5px; min-width: 35px; text-align: right;">${tiempo.texto.replace(/min/g, 'm')}</span>
                                  </div>`;
                     });
                 } else {
@@ -404,12 +443,12 @@ async function ejecutar() {
                 ubic = obtenerNomenclaturaCanopi(lat, lon);
                 dist = calcularDistanciaKm(puntoReferencia.lat, puntoReferencia.lng, lat, lon).toFixed(2);
                 colorUbic = (ubic === "RUTA") ? "#27ae60" : "#d35400";
-                tiempoPatio = (ubic === "RUTA") ? ` | ${Math.round(parseFloat(dist) * 4)}min` : ' | En patio';
+                tiempoPatio = (ubic === "RUTA") ? ` | ${formatearTiempoPatio(Math.round(parseFloat(dist) * 4))}` : ' | <span style="color:#27ae60;">En patio</span>';
             }
             return `<tr>
                 <td>${i+1}</td>
                 <td>${item.system_name || '-'}</td>
-                <td>${item.vehicle_code || '-'}</td>
+                <td><b style="color:${colorIdBus(item.vehicle_code)};">${item.vehicle_code || '-'}</b></td>
                 <td>${item.issue_description || '-'}</td>
                 <td>${item.date_created || '-'}</td>
                 <td>${item.days_off ?? '-'}</td>
@@ -420,20 +459,8 @@ async function ejecutar() {
         }).join('');
 
         document.getElementById("loader").style.display = "none";
-        const btnB = document.getElementById("checkActivar");
-        if (btnB) {
-            btnB.disabled = false;
-            btnB.addEventListener("change", () => {
-                document.getElementById("contenedor-entrada").style.display = btnB.checked ? "block" : "none";
-            });
-        }
-        document.getElementById("campo-texto").addEventListener("input", procesarTextoPegado);
-
-        const valorGuardado = localStorage.getItem('campoTextoValue');
-        if (valorGuardado) {
-            document.getElementById("campo-texto").value = valorGuardado;
-            procesarTextoPegado();
-        }
+        datosListos = true;
+        procesarTextoPegado();
 
         //pintar map
         generarMapaVisual();
@@ -450,4 +477,25 @@ async function ejecutar() {
 }
 
 ejecutar();
-                       
+
+// --- INICIALIZACIÓN INMEDIATA (aunque los datos aún se carguen) ---
+const campoTextoEl = document.getElementById("campo-texto");
+if (campoTextoEl) {
+    campoTextoEl.addEventListener("input", procesarTextoPegado);
+    const valorGuardado = localStorage.getItem('campoTextoValue');
+    if (valorGuardado) campoTextoEl.value = valorGuardado;
+    procesarTextoPegado();
+}
+
+const btnBorrarEl = document.getElementById("btn-borrar");
+if (btnBorrarEl) {
+    btnBorrarEl.addEventListener("click", () => {
+        if (campoTextoEl) {
+            campoTextoEl.value = "";
+            localStorage.removeItem('campoTextoValue');
+            procesarTextoPegado();
+        }
+    });
+}
+       
+     
