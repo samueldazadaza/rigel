@@ -17,6 +17,29 @@ const configCanopis = {
     "G": { p1: { lat: 4.700382, lon: -74.165165 }, pn: { lat: 4.701766, lon: -74.163669 }, min: 1, max: 63, label: "G" }
 };
 
+const localidadesBogota = [
+    { numero: 1, localidad: "Usaquén", latitud: 4.7420, longitud: -74.0310 },
+    { numero: 2, localidad: "Chapinero", latitud: 4.6500, longitud: -74.0450 },
+    { numero: 3, localidad: "Santa Fe", latitud: 4.5950, longitud: -74.0500 },
+    { numero: 4, localidad: "San Cristóbal", latitud: 4.5600, longitud: -74.0750 },
+    { numero: 5, localidad: "Usme", latitud: 4.4300, longitud: -74.1100 },
+    { numero: 6, localidad: "Tunjuelito", latitud: 4.5750, longitud: -74.1350 },
+    { numero: 7, localidad: "Bosa", latitud: 4.6150, longitud: -74.1900 },
+    { numero: 8, localidad: "Kennedy", latitud: 4.6350, longitud: -74.1450 },
+    { numero: 9, localidad: "Fontibón", latitud: 4.6750, longitud: -74.1450 },
+    { numero: 10, localidad: "Engativá", latitud: 4.7000, longitud: -74.1150 },
+    { numero: 11, localidad: "Suba", latitud: 4.7450, longitud: -74.1000 },
+    { numero: 12, localidad: "Barrios Unidos", latitud: 4.6680, longitud: -74.0780 },
+    { numero: 13, localidad: "Teusaquillo", latitud: 4.6420, longitud: -74.0880 },
+    { numero: 14, localidad: "Los Mártires", latitud: 4.6050, longitud: -74.0870 },
+    { numero: 15, localidad: "Antonio Nariño", latitud: 4.5880, longitud: -74.1020 },
+    { numero: 16, localidad: "Puente Aranda", latitud: 4.6220, longitud: -74.1120 },
+    { numero: 17, localidad: "La Candelaria", latitud: 4.5960, longitud: -74.0730 },
+    { numero: 18, localidad: "Rafael Uribe Uribe", latitud: 4.5700, longitud: -74.1120 },
+    { numero: 19, localidad: "Ciudad Bolívar", latitud: 4.4800, longitud: -74.1550 },
+    { numero: 20, localidad: "Sumapaz", latitud: 4.0200, longitud: -74.3200 }
+];
+
 const aliasPosiciones = {
     // --- AREA UF17 (CARRIL D) ---
     "D21": "PINT-UF17", "D22": "PINT-UF17",
@@ -168,6 +191,16 @@ function obtenerNomenclaturaCanopi(latV, lonV) {
     return aliasPosiciones[nomenclaturaBase] || nomenclaturaBase;
 }
 
+function obtenerLocalidadBogota(latV, lonV) {
+    if (!latV || !lonV) return '-';
+    let mejor = null, minKm = Infinity;
+    for (const loc of localidadesBogota) {
+        const d = calcularDistanciaKm(latV, lonV, loc.latitud, loc.longitud);
+        if (d < minKm) { minKm = d; mejor = loc; }
+    }
+    return mejor ? mejor.localidad : '-';
+}
+
 
                                  
 
@@ -292,7 +325,7 @@ function procesarTextoPegado() {
 
             const colorUbic = (ubic === "RUTA") ? "#27ae60" : "#d35400";
             const colorHace = tiempoObj.alerta ? "#e74c3c" : "#2c3e50";
-            const tiempoPatio = (ubic === "RUTA") ? formatearTiempoPatio(Math.round(parseFloat(dist) * 4)) : "En patio";
+            const tiempoPatio = (ubic === "RUTA") ? `${formatearTiempoPatio(Math.round(parseFloat(dist) * 4))} (${obtenerLocalidadBogota(lat, lon)})` : "En patio";
 
             tabla += `<tr>
                 <td><b style="color:${colorIdBus(cod)};">${escapeHTML(cod)}</b></td>
@@ -497,5 +530,3 @@ if (btnBorrarEl) {
         }
     });
 }
-       
-     
